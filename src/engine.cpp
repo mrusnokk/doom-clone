@@ -2,11 +2,14 @@
 #include <iostream>
 #include <cmath>   // Pro sin() a cos()
 #include "Map.hpp" // Potřebujeme vidět mapu kvůli kolizím
-#include "Weapon.hpp"
 #include "Font.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+// Vložíme implementaci stb_vorbis.c přímo sem, abychom nemuseli řešit C/C++ kompilátory v CMake
+#include "stb_vorbis.c"
+#include <stdlib.h>
 
 Engine::Engine(int width, int height)
     : screenWidth(width), screenHeight(height), isRunning(false),
@@ -15,7 +18,7 @@ Engine::Engine(int width, int height)
 {
     player = {2.0, 2.0, -1.0, 0.0, 0.0, 0.66};
 
-    if (!SDL_Init(SDL_INIT_VIDEO))
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
     {
         std::cerr << "Chyba inicializace SDL3: " << SDL_GetError() << "\n";
         return;
@@ -85,6 +88,15 @@ Engine::Engine(int width, int height)
     loadTex("wall.png", textures[2]);
     loadTex("wall.png", textures[3]);
     
+    if (!loadTex("door.png", textures[4])) {
+        // Fallback pro dveře (žlutý čtverec, aby byly nápadné)
+        for (int x = 0; x < TEX_WIDTH; x++) {
+            for (int y = 0; y < TEX_HEIGHT; y++) {
+                textures[4][TEX_HEIGHT * y + x] = 0xFFFFFF00;
+            }
+        }
+    }
+    
     if (!loadTex("floor.png", floorTexture)) {
         for(int i=0;i<TEX_WIDTH*TEX_HEIGHT;i++) floorTexture[i]=0xFF444444;
     }
@@ -100,24 +112,100 @@ Engine::Engine(int width, int height)
         }
     }
 
-    // Načtení death screen
-    int channels;
-    unsigned char* deathData = stbi_load("death_screen.png", &deathTexWidth, &deathTexHeight, &channels, 4);
-    if (deathData) {
-        deathTexture.resize(deathTexWidth * deathTexHeight);
-        for (int i = 0; i < deathTexWidth * deathTexHeight; i++) {
-            uint8_t r = deathData[i*4];
-            uint8_t g = deathData[i*4+1];
-            uint8_t b = deathData[i*4+2];
-            uint8_t a = deathData[i*4+3];
-            deathTexture[i] = (a << 24) | (r << 16) | (g << 8) | b;
+    // Načtení UI textur a Death Screen s dynamickou velikostí
+    auto loadDynTex = [](const char* path, std::vector<uint32_t>& tex, int& w, int& h, bool autoTransparent = false) {
+        int channels;
+        unsigned char* data = stbi_load(path, &w, &h, &channels, 4);
+        if (data) {
+            tex.resize(w * h);
+            uint32_t bgColor = 0;
+            // Pokud je zapnutý autoTransparent, ale obrázek už MÁ průhlednost v levém horním rohu, vypneme ho.
+            if (autoTransparent && data[3] == 0) {
+                autoTransparent = false;
+            }
+            if (autoTransparent) {
+                bgColor = (data[0] << 16) | (data[1] << 8) | data[2];
+            }
+
+            for (int i = 0; i < w * h; i++) {
+                uint8_t r = data[i*4];
+                uint8_t g = data[i*4+1];
+                uint8_t b = data[i*4+2];
+                uint8_t a = data[i*4+3];
+                
+                if (autoTransparent) {
+                    int dr = std::abs((int)r - (int)((bgColor >> 16) & 0xFF));
+                    int dg = std::abs((int)g - (int)((bgColor >> 8) & 0xFF));
+                    int db = std::abs((int)b - (int)(bgColor & 0xFF));
+                    // Pokud je barva hodně podobná barvě levého horního pixelu, zprůhledníme ji
+                    if (dr + dg + db < 60) {
+                        a = 0;
+                    }
+                }
+                
+                tex[i] = (a << 24) | (r << 16) | (g << 8) | b;
+            }
+            stbi_image_free(data);
         }
-        stbi_image_free(deathData);
+    };
+    
+    // Zbraň - načítání jednotlivých framů z AUT9 (A až Z)
+    for (char c = 'A'; c <= 'Z'; c++) {
+        std::string filename = "SPRITES/AUT9" + std::string(1, c) + "0.png";
+        std::vector<uint32_t> frameTex;
+        int frameW = 0, frameH = 0;
+        loadDynTex(filename.c_str(), frameTex, frameW, frameH, true);
+        if (!frameTex.empty()) {
+            SpriteFrame sf;
+            sf.pixels = frameTex;
+            sf.w = frameW;
+            sf.h = frameH;
+            weaponFrames.push_back(sf);
+        } else {
+            break; // Konec sekvence
+        }
+    }
+    
+    loadDynTex("hud.png", hudTexture, hudTexWidth, hudTexHeight);
+    loadDynTex("menu_bg.png", menuBgTexture, menuBgTexWidth, menuBgTexHeight);
+    loadDynTex("death_screen.png", deathTexture, deathTexWidth, deathTexHeight);
+
+    // --- AUDIO SYSTEM ---
+    audioDevice = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr);
+    if (audioDevice) {
+        int channels = 0, sample_rate = 0;
+        short* decoded_data = nullptr;
+        // Načteme jeden ze zvuků výstřelu
+        int samples = stb_vorbis_decode_filename("SOUNDS/AUT9FIRC.ogg", &channels, &sample_rate, &decoded_data);
+        if (samples > 0 && decoded_data) {
+            weaponAudioData = decoded_data;
+            weaponAudioSamples = samples * channels;
+            
+            SDL_AudioSpec spec;
+            spec.format = SDL_AUDIO_S16LE; // 16-bit PCM z stb_vorbis
+            spec.channels = channels;
+            spec.freq = sample_rate;
+            
+            weaponAudioStream = SDL_CreateAudioStream(&spec, nullptr); // nullptr znamená "přizpůsob se zařízení"
+            if (weaponAudioStream) {
+                SDL_BindAudioStream(audioDevice, weaponAudioStream);
+            }
+        }
     }
 }
 
 Engine::~Engine()
 {
+    if (weaponAudioStream) {
+        SDL_DestroyAudioStream(weaponAudioStream);
+    }
+    if (audioDevice) {
+        SDL_CloseAudioDevice(audioDevice);
+    }
+    if (weaponAudioData) {
+        free(weaponAudioData);
+    }
+
     if (frameTexture)
         SDL_DestroyTexture(frameTexture);
     if (renderer)
@@ -125,6 +213,13 @@ Engine::~Engine()
     if (window)
         SDL_DestroyWindow(window);
     SDL_Quit();
+}
+
+bool Engine::isWalkable(int x, int y) {
+    if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) return false;
+    if (worldMap[x][y] == 0) return true;
+    if (worldMap[x][y] == 4 && doorStates[x][y] == 2) return true;
+    return false;
 }
 
 void Engine::processInput(double deltaTime) {
@@ -146,6 +241,21 @@ void Engine::processInput(double deltaTime) {
                 
                 // Zamknutí myši pro rotaci (když hrajeme) nebo uvolnění kurzoru (když jsme v menu)
                 SDL_SetWindowRelativeMouseMode(window, currentState == GameState::PLAYING);
+            }
+            
+            // INTERAKCE S DVEŘMI (E)
+            if (currentState == GameState::PLAYING && event.key.key == SDLK_E) {
+                int targetX = int(player.x + player.dirX * 1.5);
+                int targetY = int(player.y + player.dirY * 1.5);
+                if (targetX >= 0 && targetX < MAP_WIDTH && targetY >= 0 && targetY < MAP_HEIGHT) {
+                    if (worldMap[targetX][targetY] == 4) {
+                        if (doorStates[targetX][targetY] == 0) {
+                            doorStates[targetX][targetY] = 1; // Začne otevírat
+                        } else if (doorStates[targetX][targetY] == 2) {
+                            doorStates[targetX][targetY] = 3; // Začne zavírat
+                        }
+                    }
+                }
             }
             
             // OVLÁDÁNÍ MENU POMOCÍ KLÁVESNICE
@@ -237,9 +347,19 @@ void Engine::processInput(double deltaTime) {
 
         // --- STŘELBA ---
         if (currentState == GameState::PLAYING && event.type == SDL_EVENT_MOUSE_BUTTON_DOWN && event.button.button == SDL_BUTTON_LEFT) {
-            if (!isShooting) {
+            if (!isShooting && player.hp > 0) {
                 isShooting = true;
-                shootTimer = 0.15; // Animace výstřelu trvá 0.15 sekund
+                shootTimer = (weaponFrames.size() > 1) ? (weaponFrames.size() * WEAPON_ANIM_SPEED) : 0.15;
+                if (weaponFrames.size() > 1) {
+                    weaponFrameIndex = 1;
+                    weaponAnimTimer = 0.0;
+                }
+
+                // Přehrajeme zvuk výstřelu
+                if (weaponAudioStream && weaponAudioData) {
+                    SDL_PutAudioStreamData(weaponAudioStream, weaponAudioData, weaponAudioSamples * sizeof(short));
+                    SDL_FlushAudioStream(weaponAudioStream);
+                }
 
                 // Hitscan
                 for (auto& sprite : sprites) {
@@ -308,6 +428,18 @@ void Engine::processInput(double deltaTime) {
             if (shootTimer <= 0) {
                 isShooting = false;
                 shootTimer = 0.0;
+                weaponFrameIndex = 0;
+            } else {
+                if (weaponFrames.size() > 1) {
+                    weaponAnimTimer += deltaTime;
+                    if (weaponAnimTimer >= WEAPON_ANIM_SPEED) {
+                        weaponAnimTimer = 0.0;
+                        weaponFrameIndex++;
+                        if (weaponFrameIndex >= weaponFrames.size()) {
+                            weaponFrameIndex = weaponFrames.size() - 1;
+                        }
+                    }
+                }
             }
         }
 
@@ -323,14 +455,14 @@ void Engine::processInput(double deltaTime) {
         // Krok vpřed (W)
         if (keystate[SDL_SCANCODE_W]) {
             isMoving = true;
-            if (worldMap[int(player.x + player.dirX * moveSpeed + bufferX)][int(player.y)] == 0) player.x += player.dirX * moveSpeed;
-            if (worldMap[int(player.x)][int(player.y + player.dirY * moveSpeed + bufferY)] == 0) player.y += player.dirY * moveSpeed;
+            if (isWalkable(int(player.x + player.dirX * moveSpeed + bufferX), int(player.y))) player.x += player.dirX * moveSpeed;
+            if (isWalkable(int(player.x), int(player.y + player.dirY * moveSpeed + bufferY))) player.y += player.dirY * moveSpeed;
         }
         // Krok vzad (S)
         if (keystate[SDL_SCANCODE_S]) {
             isMoving = true;
-            if (worldMap[int(player.x - player.dirX * moveSpeed - bufferX)][int(player.y)] == 0) player.x -= player.dirX * moveSpeed;
-            if (worldMap[int(player.x)][int(player.y - player.dirY * moveSpeed - bufferY)] == 0) player.y -= player.dirY * moveSpeed;
+            if (isWalkable(int(player.x - player.dirX * moveSpeed - bufferX), int(player.y))) player.x -= player.dirX * moveSpeed;
+            if (isWalkable(int(player.x), int(player.y - player.dirY * moveSpeed - bufferY))) player.y -= player.dirY * moveSpeed;
         }
         // Úkrok doleva (A)
         if (keystate[SDL_SCANCODE_A]) {
@@ -339,8 +471,8 @@ void Engine::processInput(double deltaTime) {
             double strafeY = player.dirX;
             double sBufferX = (strafeX > 0) ? 0.2 : -0.2;
             double sBufferY = (strafeY > 0) ? 0.2 : -0.2;
-            if (worldMap[int(player.x + strafeX * moveSpeed + sBufferX)][int(player.y)] == 0) player.x += strafeX * moveSpeed;
-            if (worldMap[int(player.x)][int(player.y + strafeY * moveSpeed + sBufferY)] == 0) player.y += strafeY * moveSpeed;
+            if (isWalkable(int(player.x + strafeX * moveSpeed + sBufferX), int(player.y))) player.x += strafeX * moveSpeed;
+            if (isWalkable(int(player.x), int(player.y + strafeY * moveSpeed + sBufferY))) player.y += strafeY * moveSpeed;
         }
         // Úkrok doprava (D)
         if (keystate[SDL_SCANCODE_D]) {
@@ -349,8 +481,8 @@ void Engine::processInput(double deltaTime) {
             double strafeY = -player.dirX;
             double sBufferX = (strafeX > 0) ? 0.2 : -0.2;
             double sBufferY = (strafeY > 0) ? 0.2 : -0.2;
-            if (worldMap[int(player.x + strafeX * moveSpeed + sBufferX)][int(player.y)] == 0) player.x += strafeX * moveSpeed;
-            if (worldMap[int(player.x)][int(player.y + strafeY * moveSpeed + sBufferY)] == 0) player.y += strafeY * moveSpeed;
+            if (isWalkable(int(player.x + strafeX * moveSpeed + sBufferX), int(player.y))) player.x += strafeX * moveSpeed;
+            if (isWalkable(int(player.x), int(player.y + strafeY * moveSpeed + sBufferY))) player.y += strafeY * moveSpeed;
         }
 
         // Skákání
@@ -396,10 +528,10 @@ void Engine::processInput(double deltaTime) {
                 double sBufferY = (moveY > 0) ? 0.2 : -0.2;
 
                 // Kolize pro nepřítele, aby nelezl přes zdi
-                if (worldMap[int(sprite.x + moveX + sBufferX)][int(sprite.y)] == 0) {
+                if (isWalkable(int(sprite.x + moveX + sBufferX), int(sprite.y))) {
                     sprite.x += moveX;
                 }
-                if (worldMap[int(sprite.x)][int(sprite.y + moveY + sBufferY)] == 0) {
+                if (isWalkable(int(sprite.x), int(sprite.y + moveY + sBufferY))) {
                     sprite.y += moveY;
                 }
             } else if (dist <= 0.6) {
@@ -426,6 +558,28 @@ void Engine::processInput(double deltaTime) {
             weaponBobTime += deltaTime;
         } else {
             weaponBobTime = 0; // Plynulý návrat do klidu
+        }
+
+        // --- AKTUALIZACE DVEŘÍ ---
+        for (int x = 0; x < MAP_WIDTH; x++) {
+            for (int y = 0; y < MAP_HEIGHT; y++) {
+                if (doorStates[x][y] == 1) { // Otevírá se
+                    doorOffsets[x][y] += 1.5 * deltaTime;
+                    if (doorOffsets[x][y] >= 1.0) {
+                        doorOffsets[x][y] = 1.0;
+                        doorStates[x][y] = 2; // Plně otevřeno (průchozí)
+                    }
+                } else if (doorStates[x][y] == 3) { // Zavírá se
+                    // Zavíráme jen, pokud v nich nikdo nestojí (jednoduchá kontrola hráče)
+                    if (int(player.x) != x || int(player.y) != y) {
+                        doorOffsets[x][y] -= 1.5 * deltaTime;
+                        if (doorOffsets[x][y] <= 0.0) {
+                            doorOffsets[x][y] = 0.0;
+                            doorStates[x][y] = 0; // Plně zavřeno
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -475,14 +629,24 @@ void Engine::drawMinimap() {
     int mapOffsetX = 10;    // Odsazení od levého okraje obrazovky
     int mapOffsetY = 10;    // Odsazení od horního okraje
 
+    // Tmavé poloprůhledné pozadí minimapy
+    for (int y = mapOffsetY - 5; y < mapOffsetY + MAP_HEIGHT * blockSize + 5; y++) {
+        for (int x = mapOffsetX - 5; x < mapOffsetX + MAP_WIDTH * blockSize + 5; x++) {
+            if (x >= 0 && x < screenWidth && y >= 0 && y < screenHeight) {
+                uint32_t bgPixel = framebuffer[y * screenWidth + x];
+                framebuffer[y * screenWidth + x] = (bgPixel >> 1) & 0x7F7F7F7F; // Ztmaví pozadí
+            }
+        }
+    }
+
     // 1. Vykreslení bloků mapy
     for (int y = 0; y < MAP_HEIGHT; y++) {
         for (int x = 0; x < MAP_WIDTH; x++) {
-            // Prázdný prostor = tmavě šedá, Zeď = světle šedá
-            uint32_t color = (worldMap[x][y] > 0) ? 0xFF888888 : 0xFF222222;
-            
-            // Kreslíme (blockSize - 1) nám vytvoří krásnou 1px mřížku mezi bloky
-            drawRect(mapOffsetX + x * blockSize, mapOffsetY + y * blockSize, blockSize - 1, blockSize - 1, color);
+            if (worldMap[x][y] > 0) {
+                // Zdi modře, dveře tyrkysově
+                uint32_t color = (worldMap[x][y] == 4) ? 0xFF00FFFF : 0xFF0088FF;
+                drawRect(mapOffsetX + x * blockSize, mapOffsetY + y * blockSize, blockSize - 1, blockSize - 1, color);
+            }
         }
     }
 
@@ -502,9 +666,23 @@ void Engine::drawMinimap() {
 }
 
 void Engine::drawMenu() {
-    // 1. Ztmavíme celou obrazovku
-    for (uint32_t& pixel : framebuffer) {
-        pixel = (pixel >> 1) & 0x7F7F7F7F; 
+    // 1. Vykreslení menu pozadí, pokud existuje
+    if (!menuBgTexture.empty() && menuBgTexWidth > 0 && menuBgTexHeight > 0) {
+        for (int y = 0; y < screenHeight; y++) {
+            for (int x = 0; x < screenWidth; x++) {
+                int srcX = (x * menuBgTexWidth) / screenWidth;
+                int srcY = (y * menuBgTexHeight) / screenHeight;
+                uint32_t texColor = menuBgTexture[srcY * menuBgTexWidth + srcX];
+                if ((texColor & 0xFF000000) != 0) { // Pokud není plně průhledný
+                    framebuffer[y * screenWidth + x] = texColor;
+                }
+            }
+        }
+    } else {
+        // Fallback: Ztmavíme celou obrazovku
+        for (uint32_t& pixel : framebuffer) {
+            pixel = (pixel >> 1) & 0x7F7F7F7F; 
+        }
     }
 
     // Nápis MENU nahoře
@@ -540,7 +718,7 @@ void Engine::render() {
     // 1. ZÁKLADNÍ VRSTVA: Vykreslení 3D světa
     // =========================================================
     // Vykreslujeme vždy, i když jsme v menu, aby hra zůstala "zamrzlá" na pozadí
-    raycaster.render(framebuffer, screenWidth, screenHeight, player, textures, zBuffer);
+    raycaster.render(framebuffer, screenWidth, screenHeight, player, textures, zBuffer, doorOffsets);
     raycaster.renderSprites(framebuffer, screenWidth, screenHeight, player, sprites, zBuffer);
 
     // =========================================================
@@ -552,30 +730,33 @@ void Engine::render() {
         drawMinimap(); 
 
         // --- B. VYKRESLENÍ ZBRANĚ Z POHLEDU PRVNÍ OSOBY ---
-        int scale = screenWidth / 40; // Dynamické zvětšení zbraně podle rozlišení okna
-        if (scale < 1) scale = 1;
-
-        // Výpočet houpání (Weapon Bobbing) - pokud se hýbeme, použijeme sinusovou vlnu
         int bobOffset = isMoving ? (int)(std::abs(std::sin(weaponBobTime * 8.0)) * 20.0) : 0;
-        int recoilOffset = isShooting ? 30 : 0; // Zbraň se posune o 30 pixelů dolů při výstřelu
+        int recoilOffset = isShooting ? 40 : 0; // Zbraň se posune dolů při výstřelu
 
-        // Pozice zbraně (dole uprostřed)
-        int startX = (screenWidth / 2) - ((WEAPON_WIDTH * scale) / 2);
-        int startY = screenHeight - (WEAPON_HEIGHT * scale) + bobOffset + recoilOffset + 10; 
-
-        // Procházení 16x16 mřížky našeho pixel artu a zvětšení na obrazovku
-        for (int y = 0; y < WEAPON_HEIGHT; y++) {
-            for (int x = 0; x < WEAPON_WIDTH; x++) {
-                uint32_t color = weaponSprite[y][x];
+        if (!weaponFrames.empty() && weaponFrameIndex < weaponFrames.size()) {
+            auto& frame = weaponFrames[weaponFrameIndex];
+            
+            if (frame.w > 0 && frame.h > 0) {
+                // Doom sprity jsou dělané na 320x200 rozlišení. My máme screenWidth.
+                double scale = (double)screenWidth / 320.0; 
                 
-                if (color != _) { // '_' znamená průhlednou barvu
-                    for (int sy = 0; sy < scale; sy++) {
-                        for (int sx = 0; sx < scale; sx++) {
-                            int drawX = startX + x * scale + sx;
-                            int drawY = startY + y * scale + sy;
-                            
-                            // Bezpečnostní kontrola, abychom nepřetáhli mimo okno
-                            if (drawX >= 0 && drawX < screenWidth && drawY >= 0 && drawY < screenHeight) {
+                int scaledW = frame.w * scale;
+                int scaledH = frame.h * scale;
+                
+                // Zbraň je vždy na spodním okraji a uprostřed
+                int startX = (screenWidth / 2) - (scaledW / 2);
+                int startY = screenHeight - scaledH + bobOffset + recoilOffset;
+                
+                for (int y = 0; y < scaledH; y++) {
+                    for (int x = 0; x < scaledW; x++) {
+                        int drawX = startX + x;
+                        int drawY = startY + y;
+                        if (drawX >= 0 && drawX < screenWidth && drawY >= 0 && drawY < screenHeight) {
+                            int srcX = (x * frame.w) / scaledW;
+                            int srcY = (y * frame.h) / scaledH;
+                            uint32_t color = frame.pixels[srcY * frame.w + srcX];
+                            // Vykreslíme pixel, pouze pokud jeho Alpha kanál není 0
+                            if ((color & 0xFF000000) != 0) {
                                 framebuffer[drawY * screenWidth + drawX] = color;
                             }
                         }
@@ -584,17 +765,43 @@ void Engine::render() {
             }
         }
 
-        // Vykreslení záblesku z výstřelu
-        if (isShooting && shootTimer > 0.05) {
-            int flashSize = 60;
-            drawRect(screenWidth / 2 - flashSize / 2, startY - flashSize + 10, flashSize, flashSize, 0xFFFFFF00); // Žlutý záblesk
-        }
 
-        // HUD - HP Bar
-        drawRect(20, screenHeight - 40, 200, 20, 0xFFFF0000); // Červené pozadí
-        int hpWidth = (player.hp > 0) ? (player.hp * 2) : 0;
-        drawRect(20, screenHeight - 40, hpWidth, 20, 0xFF00FF00); // Zelené HP
-        drawText("HP: " + std::to_string(player.hp), 25, screenHeight - 38, 0xFFFFFFFF, 2);
+        // --- C. VYKRESLENÍ HUDu ---
+        if (!hudTexture.empty() && hudTexWidth > 0 && hudTexHeight > 0) {
+            // Originální DOOM HUD má 320x32. Pokud je textura větší (atlas), ořízneme ji.
+            int cropW = (hudTexWidth >= 320) ? 320 : hudTexWidth;
+            int cropH = (hudTexHeight >= 32) ? 32 : hudTexHeight;
+            
+            int hudW = screenWidth;
+            int hudH = (screenWidth * cropH) / cropW; // Zachováme správný poměr stran
+            int startY = screenHeight - hudH;
+            
+            for (int y = 0; y < hudH; y++) {
+                for (int x = 0; x < hudW; x++) {
+                    int drawX = x;
+                    int drawY = startY + y;
+                    if (drawX >= 0 && drawX < screenWidth && drawY >= 0 && drawY < screenHeight) {
+                        int srcX = (x * cropW) / hudW;
+                        int srcY = (y * cropH) / hudH;
+                        uint32_t color = hudTexture[srcY * hudTexWidth + srcX];
+                        if ((color & 0xFF000000) != 0) {
+                            framebuffer[drawY * screenWidth + drawX] = color;
+                        }
+                    }
+                }
+            }
+
+            // Vykreslení textu HP tak, aby sedělo zhruba do políčka vlevo
+            // Políčko v původním DOOM HUDu je zhruba na 10% až 30% šířky obrazovky
+            std::string hpStr = std::to_string(player.hp) + "%";
+            drawText(hpStr, screenWidth * 0.12, screenHeight - (hudH * 0.6), 0xFF00FF00, 3);
+        } else {
+            // Fallback HUD
+            drawRect(20, screenHeight - 40, 200, 20, 0xFFFF0000); 
+            int hpWidth = (player.hp > 0) ? (player.hp * 2) : 0;
+            drawRect(20, screenHeight - 40, hpWidth, 20, 0xFF00FF00); 
+            drawText("HP: " + std::to_string(player.hp), 25, screenHeight - 38, 0xFFFFFFFF, 2);
+        }
 
         // Zčervenání obrazovky při zranění
         if (playerDamageTimer > 0) {

@@ -4,7 +4,7 @@
 #include <algorithm>
 #include "Engine.hpp"
 
-void Raycaster::render(std::vector<uint32_t>& framebuffer, int screenWidth, int screenHeight, const Player& player, const uint32_t textures[4][TEX_WIDTH * TEX_HEIGHT], std::vector<double>& zBuffer) {
+void Raycaster::render(std::vector<uint32_t>& framebuffer, int screenWidth, int screenHeight, const Player& player, const uint32_t textures[4][TEX_WIDTH * TEX_HEIGHT], std::vector<double>& zBuffer, const double doorOffsets[32][32]) {
     // Zjistíme, kolik vláken náš procesor podporuje (např. 8, 12, 16)
     unsigned int numThreads = std::thread::hardware_concurrency();
     if (numThreads == 0) numThreads = 4; // Pojistka
@@ -46,6 +46,7 @@ void Raycaster::render(std::vector<uint32_t>& framebuffer, int screenWidth, int 
                 sideDistY = (mapY + 1.0 - player.y) * deltaDistY;
             }
 
+            double hitDoorOffset = 0.0;
             while (hit == 0) {
                 if (sideDistX < sideDistY) {
                     sideDistX += deltaDistX;
@@ -57,7 +58,24 @@ void Raycaster::render(std::vector<uint32_t>& framebuffer, int screenWidth, int 
                     side = 1;
                 }
                 if (mapX >= 0 && mapX < MAP_WIDTH && mapY >= 0 && mapY < MAP_HEIGHT) {
-                    if (worldMap[mapX][mapY] > 0) hit = 1;
+                    if (worldMap[mapX][mapY] > 0) {
+                        if (worldMap[mapX][mapY] == 4) { // Dveře
+                            double perpDist = (side == 0) ? (mapX - player.x + (1 - stepX) / 2.0) / rayDirX 
+                                                          : (mapY - player.y + (1 - stepY) / 2.0) / rayDirY;
+                            double wallX = (side == 0) ? player.y + perpDist * rayDirY : player.x + perpDist * rayDirX;
+                            wallX -= floor(wallX);
+                            
+                            double offset = doorOffsets[mapX][mapY];
+                            // Pokud paprsek narazí do "pevné" části dveří, je to hit. 
+                            // Jinak paprsek jen proletí (smyčka while pokračuje dál).
+                            if (wallX > offset) {
+                                hit = 1;
+                                hitDoorOffset = offset;
+                            }
+                        } else {
+                            hit = 1;
+                        }
+                    }
                 } else {
                     hit = 1;
                 }
@@ -84,6 +102,9 @@ void Raycaster::render(std::vector<uint32_t>& framebuffer, int screenWidth, int 
             if (side == 0) wallX = player.y + perpWallDist * rayDirY;
             else           wallX = player.x + perpWallDist * rayDirX;
             wallX -= floor((wallX));
+            
+            wallX -= hitDoorOffset;
+            if (wallX < 0) wallX = 0;
 
             int texX = int(wallX * double(TEX_WIDTH));
             if (side == 0 && rayDirX > 0) texX = TEX_WIDTH - texX - 1;
@@ -139,7 +160,7 @@ void Raycaster::render(std::vector<uint32_t>& framebuffer, int screenWidth, int 
                     texPos += step;
                     
                     int texNumMap = worldMap[mapX][mapY];
-                    if (texNumMap < 1 || texNumMap > 3) texNumMap = 1;
+                    if (texNumMap < 1 || texNumMap > 4) texNumMap = 1;
                     uint32_t color = textures[texNumMap][TEX_HEIGHT * texY + texX];
                     
                     if (side == 1) color = (color >> 1) & 8355711;

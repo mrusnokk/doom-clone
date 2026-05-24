@@ -16,7 +16,7 @@ find_package(SDL3 REQUIRED)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 set(CMAKE_BUILD_TYPE Release)
-# Přidání spustitelného souboru a zdrojových kódů (nyní ze složky src)
+# Přidání spustitelného souboru a zdrojových kódů
 add_executable(${PROJECT_NAME} src/main.cpp src/engine.cpp src/raycaster.cpp)
 
 # Řekneme kompilátoru, kde má hledat hlavičkové soubory (.hpp a .h)

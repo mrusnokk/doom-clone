@@ -16,8 +16,9 @@ enum class GameState {
 #define TEX_WIDTH 64
 #define TEX_HEIGHT 64
 
-// Pole pro 4 různé textury (0 necháme prázdnou, použijeme 1, 2, 3)
-inline uint32_t textures[4][TEX_WIDTH * TEX_HEIGHT];
+// Globální pole pro textury a font (musí být inicializováno v .cpp)
+// Pole pro 5 různých textur (0 prázdná, 1-3 zdi, 4 dveře)
+inline uint32_t textures[5][TEX_WIDTH * TEX_HEIGHT];
 inline uint32_t floorTexture[TEX_WIDTH * TEX_HEIGHT];
 inline uint32_t ceilTexture[TEX_WIDTH * TEX_HEIGHT];
 inline uint32_t enemyTexture[TEX_WIDTH * TEX_HEIGHT];
@@ -30,6 +31,10 @@ public:
     ~Engine(); // Destruktor se postará o úklid
 
     void run(); // Hlavní metoda, která spustí hru
+
+    double doorOffsets[32][32] = {0.0};
+    int doorStates[32][32] = {0}; // 0 = closed, 1 = opening, 2 = open, 3 = closing
+    bool isWalkable(int x, int y);
 
 private:
     GameState currentState = GameState::MENU;
@@ -61,9 +66,32 @@ private:
     double playerDamageTimer = 0.0;
     double gameOverTimer = 0.0;
 
+    struct SpriteFrame {
+        std::vector<uint32_t> pixels;
+        int w;
+        int h;
+    };
+
+    // UI textury (dynamické velikosti)
+    std::vector<SpriteFrame> weaponFrames;
+    int weaponFrameIndex = 0;
+    double weaponAnimTimer = 0.0;
+    double WEAPON_ANIM_SPEED = 0.05;
+
+    std::vector<uint32_t> hudTexture;
+    int hudTexWidth = 0, hudTexHeight = 0;
+
+    std::vector<uint32_t> menuBgTexture;
+    int menuBgTexWidth = 0, menuBgTexHeight = 0;
+    
     std::vector<uint32_t> deathTexture;
-    int deathTexWidth = 0;
-    int deathTexHeight = 0;
+    int deathTexWidth = 0, deathTexHeight = 0;
+
+    // --- AUDIO SYSTEM ---
+    SDL_AudioDeviceID audioDevice = 0;
+    SDL_AudioStream* weaponAudioStream = nullptr;
+    short* weaponAudioData = nullptr;
+    int weaponAudioSamples = 0;
 
     SDL_Window* window;
     SDL_Renderer* renderer;
