@@ -7,7 +7,11 @@
 #include "Player.hpp"
 #include "Raycaster.hpp"
 
-enum class GameState { MENU, PLAYING };
+enum class GameState {
+    MENU,
+    PLAYING,
+    GAME_OVER
+};
 
 #define TEX_WIDTH 64
 #define TEX_HEIGHT 64
@@ -55,6 +59,11 @@ private:
     bool isShooting = false;
     double shootTimer = 0.0;
     double playerDamageTimer = 0.0;
+    double gameOverTimer = 0.0;
+
+    std::vector<uint32_t> deathTexture;
+    int deathTexWidth = 0;
+    int deathTexHeight = 0;
 
     SDL_Window* window;
     SDL_Renderer* renderer;

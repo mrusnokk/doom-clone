@@ -8,9 +8,9 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "E:/Michael/skola/cpp/projektFinal/Engine.cpp" "CMakeFiles/voxel_project.dir/Engine.cpp.obj" "gcc" "CMakeFiles/voxel_project.dir/Engine.cpp.obj.d"
-  "E:/Michael/skola/cpp/projektFinal/Raycaster.cpp" "CMakeFiles/voxel_project.dir/Raycaster.cpp.obj" "gcc" "CMakeFiles/voxel_project.dir/Raycaster.cpp.obj.d"
-  "E:/Michael/skola/cpp/projektFinal/main.cpp" "CMakeFiles/voxel_project.dir/main.cpp.obj" "gcc" "CMakeFiles/voxel_project.dir/main.cpp.obj.d"
+  "E:/Michael/skola/cpp/projektFinal/src/engine.cpp" "CMakeFiles/voxel_project.dir/src/engine.cpp.obj" "gcc" "CMakeFiles/voxel_project.dir/src/engine.cpp.obj.d"
+  "E:/Michael/skola/cpp/projektFinal/src/main.cpp" "CMakeFiles/voxel_project.dir/src/main.cpp.obj" "gcc" "CMakeFiles/voxel_project.dir/src/main.cpp.obj.d"
+  "E:/Michael/skola/cpp/projektFinal/src/raycaster.cpp" "CMakeFiles/voxel_project.dir/src/raycaster.cpp.obj" "gcc" "CMakeFiles/voxel_project.dir/src/raycaster.cpp.obj.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

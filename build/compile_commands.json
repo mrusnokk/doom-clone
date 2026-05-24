@@ -1,20 +1,20 @@
 [
 {
   "directory": "E:/Michael/skola/cpp/projektFinal/build",
-  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe   -O3 -DNDEBUG -std=c++20 -Wall -Wextra -Wpedantic -o CMakeFiles\\voxel_project.dir\\main.cpp.obj -c E:\\Michael\\skola\\cpp\\projektFinal\\main.cpp",
-  "file": "E:/Michael/skola/cpp/projektFinal/main.cpp",
-  "output": "CMakeFiles/voxel_project.dir/main.cpp.obj"
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/voxel_project.dir/includes_CXX.rsp -O3 -DNDEBUG -std=c++20 -Wall -Wextra -Wpedantic -o CMakeFiles\\voxel_project.dir\\src\\main.cpp.obj -c E:\\Michael\\skola\\cpp\\projektFinal\\src\\main.cpp",
+  "file": "E:/Michael/skola/cpp/projektFinal/src/main.cpp",
+  "output": "CMakeFiles/voxel_project.dir/src/main.cpp.obj"
 },
 {
   "directory": "E:/Michael/skola/cpp/projektFinal/build",
-  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe   -O3 -DNDEBUG -std=c++20 -Wall -Wextra -Wpedantic -o CMakeFiles\\voxel_project.dir\\Engine.cpp.obj -c E:\\Michael\\skola\\cpp\\projektFinal\\Engine.cpp",
-  "file": "E:/Michael/skola/cpp/projektFinal/Engine.cpp",
-  "output": "CMakeFiles/voxel_project.dir/Engine.cpp.obj"
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/voxel_project.dir/includes_CXX.rsp -O3 -DNDEBUG -std=c++20 -Wall -Wextra -Wpedantic -o CMakeFiles\\voxel_project.dir\\src\\engine.cpp.obj -c E:\\Michael\\skola\\cpp\\projektFinal\\src\\engine.cpp",
+  "file": "E:/Michael/skola/cpp/projektFinal/src/engine.cpp",
+  "output": "CMakeFiles/voxel_project.dir/src/engine.cpp.obj"
 },
 {
   "directory": "E:/Michael/skola/cpp/projektFinal/build",
-  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe   -O3 -DNDEBUG -std=c++20 -Wall -Wextra -Wpedantic -o CMakeFiles\\voxel_project.dir\\Raycaster.cpp.obj -c E:\\Michael\\skola\\cpp\\projektFinal\\Raycaster.cpp",
-  "file": "E:/Michael/skola/cpp/projektFinal/Raycaster.cpp",
-  "output": "CMakeFiles/voxel_project.dir/Raycaster.cpp.obj"
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/voxel_project.dir/includes_CXX.rsp -O3 -DNDEBUG -std=c++20 -Wall -Wextra -Wpedantic -o CMakeFiles\\voxel_project.dir\\src\\raycaster.cpp.obj -c E:\\Michael\\skola\\cpp\\projektFinal\\src\\raycaster.cpp",
+  "file": "E:/Michael/skola/cpp/projektFinal/src/raycaster.cpp",
+  "output": "CMakeFiles/voxel_project.dir/src/raycaster.cpp.obj"
 }
 ]

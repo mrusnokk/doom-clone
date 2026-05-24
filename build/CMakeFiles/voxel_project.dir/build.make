@@ -71,60 +71,63 @@ include CMakeFiles/voxel_project.dir/flags.make
 CMakeFiles/voxel_project.dir/codegen:
 .PHONY : CMakeFiles/voxel_project.dir/codegen
 
-CMakeFiles/voxel_project.dir/main.cpp.obj: CMakeFiles/voxel_project.dir/flags.make
-CMakeFiles/voxel_project.dir/main.cpp.obj: E:/Michael/skola/cpp/projektFinal/main.cpp
-CMakeFiles/voxel_project.dir/main.cpp.obj: CMakeFiles/voxel_project.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=E:\Michael\skola\cpp\projektFinal\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/voxel_project.dir/main.cpp.obj"
-	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/voxel_project.dir/main.cpp.obj -MF CMakeFiles\voxel_project.dir\main.cpp.obj.d -o CMakeFiles\voxel_project.dir\main.cpp.obj -c E:\Michael\skola\cpp\projektFinal\main.cpp
+CMakeFiles/voxel_project.dir/src/main.cpp.obj: CMakeFiles/voxel_project.dir/flags.make
+CMakeFiles/voxel_project.dir/src/main.cpp.obj: CMakeFiles/voxel_project.dir/includes_CXX.rsp
+CMakeFiles/voxel_project.dir/src/main.cpp.obj: E:/Michael/skola/cpp/projektFinal/src/main.cpp
+CMakeFiles/voxel_project.dir/src/main.cpp.obj: CMakeFiles/voxel_project.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=E:\Michael\skola\cpp\projektFinal\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/voxel_project.dir/src/main.cpp.obj"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/voxel_project.dir/src/main.cpp.obj -MF CMakeFiles\voxel_project.dir\src\main.cpp.obj.d -o CMakeFiles\voxel_project.dir\src\main.cpp.obj -c E:\Michael\skola\cpp\projektFinal\src\main.cpp
 
-CMakeFiles/voxel_project.dir/main.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/voxel_project.dir/main.cpp.i"
-	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E E:\Michael\skola\cpp\projektFinal\main.cpp > CMakeFiles\voxel_project.dir\main.cpp.i
+CMakeFiles/voxel_project.dir/src/main.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/voxel_project.dir/src/main.cpp.i"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E E:\Michael\skola\cpp\projektFinal\src\main.cpp > CMakeFiles\voxel_project.dir\src\main.cpp.i
 
-CMakeFiles/voxel_project.dir/main.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/voxel_project.dir/main.cpp.s"
-	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S E:\Michael\skola\cpp\projektFinal\main.cpp -o CMakeFiles\voxel_project.dir\main.cpp.s
+CMakeFiles/voxel_project.dir/src/main.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/voxel_project.dir/src/main.cpp.s"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S E:\Michael\skola\cpp\projektFinal\src\main.cpp -o CMakeFiles\voxel_project.dir\src\main.cpp.s
 
-CMakeFiles/voxel_project.dir/Engine.cpp.obj: CMakeFiles/voxel_project.dir/flags.make
-CMakeFiles/voxel_project.dir/Engine.cpp.obj: E:/Michael/skola/cpp/projektFinal/Engine.cpp
-CMakeFiles/voxel_project.dir/Engine.cpp.obj: CMakeFiles/voxel_project.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=E:\Michael\skola\cpp\projektFinal\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/voxel_project.dir/Engine.cpp.obj"
-	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/voxel_project.dir/Engine.cpp.obj -MF CMakeFiles\voxel_project.dir\Engine.cpp.obj.d -o CMakeFiles\voxel_project.dir\Engine.cpp.obj -c E:\Michael\skola\cpp\projektFinal\Engine.cpp
+CMakeFiles/voxel_project.dir/src/engine.cpp.obj: CMakeFiles/voxel_project.dir/flags.make
+CMakeFiles/voxel_project.dir/src/engine.cpp.obj: CMakeFiles/voxel_project.dir/includes_CXX.rsp
+CMakeFiles/voxel_project.dir/src/engine.cpp.obj: E:/Michael/skola/cpp/projektFinal/src/engine.cpp
+CMakeFiles/voxel_project.dir/src/engine.cpp.obj: CMakeFiles/voxel_project.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=E:\Michael\skola\cpp\projektFinal\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/voxel_project.dir/src/engine.cpp.obj"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/voxel_project.dir/src/engine.cpp.obj -MF CMakeFiles\voxel_project.dir\src\engine.cpp.obj.d -o CMakeFiles\voxel_project.dir\src\engine.cpp.obj -c E:\Michael\skola\cpp\projektFinal\src\engine.cpp
 
-CMakeFiles/voxel_project.dir/Engine.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/voxel_project.dir/Engine.cpp.i"
-	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E E:\Michael\skola\cpp\projektFinal\Engine.cpp > CMakeFiles\voxel_project.dir\Engine.cpp.i
+CMakeFiles/voxel_project.dir/src/engine.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/voxel_project.dir/src/engine.cpp.i"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E E:\Michael\skola\cpp\projektFinal\src\engine.cpp > CMakeFiles\voxel_project.dir\src\engine.cpp.i
 
-CMakeFiles/voxel_project.dir/Engine.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/voxel_project.dir/Engine.cpp.s"
-	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S E:\Michael\skola\cpp\projektFinal\Engine.cpp -o CMakeFiles\voxel_project.dir\Engine.cpp.s
+CMakeFiles/voxel_project.dir/src/engine.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/voxel_project.dir/src/engine.cpp.s"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S E:\Michael\skola\cpp\projektFinal\src\engine.cpp -o CMakeFiles\voxel_project.dir\src\engine.cpp.s
 
-CMakeFiles/voxel_project.dir/Raycaster.cpp.obj: CMakeFiles/voxel_project.dir/flags.make
-CMakeFiles/voxel_project.dir/Raycaster.cpp.obj: E:/Michael/skola/cpp/projektFinal/Raycaster.cpp
-CMakeFiles/voxel_project.dir/Raycaster.cpp.obj: CMakeFiles/voxel_project.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=E:\Michael\skola\cpp\projektFinal\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/voxel_project.dir/Raycaster.cpp.obj"
-	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/voxel_project.dir/Raycaster.cpp.obj -MF CMakeFiles\voxel_project.dir\Raycaster.cpp.obj.d -o CMakeFiles\voxel_project.dir\Raycaster.cpp.obj -c E:\Michael\skola\cpp\projektFinal\Raycaster.cpp
+CMakeFiles/voxel_project.dir/src/raycaster.cpp.obj: CMakeFiles/voxel_project.dir/flags.make
+CMakeFiles/voxel_project.dir/src/raycaster.cpp.obj: CMakeFiles/voxel_project.dir/includes_CXX.rsp
+CMakeFiles/voxel_project.dir/src/raycaster.cpp.obj: E:/Michael/skola/cpp/projektFinal/src/raycaster.cpp
+CMakeFiles/voxel_project.dir/src/raycaster.cpp.obj: CMakeFiles/voxel_project.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=E:\Michael\skola\cpp\projektFinal\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/voxel_project.dir/src/raycaster.cpp.obj"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/voxel_project.dir/src/raycaster.cpp.obj -MF CMakeFiles\voxel_project.dir\src\raycaster.cpp.obj.d -o CMakeFiles\voxel_project.dir\src\raycaster.cpp.obj -c E:\Michael\skola\cpp\projektFinal\src\raycaster.cpp
 
-CMakeFiles/voxel_project.dir/Raycaster.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/voxel_project.dir/Raycaster.cpp.i"
-	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E E:\Michael\skola\cpp\projektFinal\Raycaster.cpp > CMakeFiles\voxel_project.dir\Raycaster.cpp.i
+CMakeFiles/voxel_project.dir/src/raycaster.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/voxel_project.dir/src/raycaster.cpp.i"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E E:\Michael\skola\cpp\projektFinal\src\raycaster.cpp > CMakeFiles\voxel_project.dir\src\raycaster.cpp.i
 
-CMakeFiles/voxel_project.dir/Raycaster.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/voxel_project.dir/Raycaster.cpp.s"
-	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S E:\Michael\skola\cpp\projektFinal\Raycaster.cpp -o CMakeFiles\voxel_project.dir\Raycaster.cpp.s
+CMakeFiles/voxel_project.dir/src/raycaster.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/voxel_project.dir/src/raycaster.cpp.s"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S E:\Michael\skola\cpp\projektFinal\src\raycaster.cpp -o CMakeFiles\voxel_project.dir\src\raycaster.cpp.s
 
 # Object files for target voxel_project
 voxel_project_OBJECTS = \
-"CMakeFiles/voxel_project.dir/main.cpp.obj" \
-"CMakeFiles/voxel_project.dir/Engine.cpp.obj" \
-"CMakeFiles/voxel_project.dir/Raycaster.cpp.obj"
+"CMakeFiles/voxel_project.dir/src/main.cpp.obj" \
+"CMakeFiles/voxel_project.dir/src/engine.cpp.obj" \
+"CMakeFiles/voxel_project.dir/src/raycaster.cpp.obj"
 
 # External object files for target voxel_project
 voxel_project_EXTERNAL_OBJECTS =
 
-voxel_project.exe: CMakeFiles/voxel_project.dir/main.cpp.obj
-voxel_project.exe: CMakeFiles/voxel_project.dir/Engine.cpp.obj
-voxel_project.exe: CMakeFiles/voxel_project.dir/Raycaster.cpp.obj
+voxel_project.exe: CMakeFiles/voxel_project.dir/src/main.cpp.obj
+voxel_project.exe: CMakeFiles/voxel_project.dir/src/engine.cpp.obj
+voxel_project.exe: CMakeFiles/voxel_project.dir/src/raycaster.cpp.obj
 voxel_project.exe: CMakeFiles/voxel_project.dir/build.make
 voxel_project.exe: C:/msys64/ucrt64/lib/libSDL3.dll.a
 voxel_project.exe: CMakeFiles/voxel_project.dir/linkLibs.rsp
@@ -132,6 +135,7 @@ voxel_project.exe: CMakeFiles/voxel_project.dir/objects1.rsp
 voxel_project.exe: CMakeFiles/voxel_project.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=E:\Michael\skola\cpp\projektFinal\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable voxel_project.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles\voxel_project.dir\link.txt --verbose=$(VERBOSE)
+	C:\msys64\ucrt64\bin\cmake.exe -E copy_if_different E:/Michael/skola/cpp/projektFinal/assets/ceil.png E:/Michael/skola/cpp/projektFinal/assets/death_screen.png E:/Michael/skola/cpp/projektFinal/assets/enemy.png E:/Michael/skola/cpp/projektFinal/assets/floor.png E:/Michael/skola/cpp/projektFinal/assets/wall.png E:/Michael/skola/cpp/projektFinal/build
 
 # Rule to build all files generated by this target.
 CMakeFiles/voxel_project.dir/build: voxel_project.exe

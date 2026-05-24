@@ -16,9 +16,11 @@ find_package(SDL3 REQUIRED)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 set(CMAKE_BUILD_TYPE Release)
-# Přidání spustitelného souboru a zdrojových kódů
-# Až přidáš další .cpp soubory, prostě je sem připíšeš, např. main.cpp renderer.cpp
-add_executable(${PROJECT_NAME} main.cpp Engine.cpp Raycaster.cpp)
+# Přidání spustitelného souboru a zdrojových kódů (nyní ze složky src)
+add_executable(${PROJECT_NAME} src/main.cpp src/engine.cpp src/raycaster.cpp)
+
+# Řekneme kompilátoru, kde má hledat hlavičkové soubory (.hpp a .h)
+target_include_directories(${PROJECT_NAME} PRIVATE include lib)
 
 # Přilinkování SDL3 a knihovny pro vlákna k našemu programu
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 Threads::Threads)
@@ -28,4 +30,14 @@ if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W4)
 else()
     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+# Automatické zkopírování .png obrázků ze složky assets do složky build po úspěšné kompilaci
+file(GLOB PNG_FILES "${CMAKE_SOURCE_DIR}/assets/*.png")
+if(PNG_FILES)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${PNG_FILES}
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>
+    )
 endif()

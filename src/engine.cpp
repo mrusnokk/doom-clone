@@ -99,6 +99,21 @@ Engine::Engine(int width, int height)
             }
         }
     }
+
+    // Načtení death screen
+    int channels;
+    unsigned char* deathData = stbi_load("death_screen.png", &deathTexWidth, &deathTexHeight, &channels, 4);
+    if (deathData) {
+        deathTexture.resize(deathTexWidth * deathTexHeight);
+        for (int i = 0; i < deathTexWidth * deathTexHeight; i++) {
+            uint8_t r = deathData[i*4];
+            uint8_t g = deathData[i*4+1];
+            uint8_t b = deathData[i*4+2];
+            uint8_t a = deathData[i*4+3];
+            deathTexture[i] = (a << 24) | (r << 16) | (g << 8) | b;
+        }
+        stbi_image_free(deathData);
+    }
 }
 
 Engine::~Engine()
@@ -256,6 +271,32 @@ void Engine::processInput(double deltaTime) {
                 }
             }
         }
+        
+        if (currentState == GameState::GAME_OVER) {
+            if (gameOverTimer <= 0 && (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN || event.type == SDL_EVENT_KEY_DOWN)) {
+                // Resetování hry a návrat do MENU
+                player.hp = 100;
+                player.x = 2.0;
+                player.y = 2.0;
+                player.z = 0;
+                player.vz = 0;
+                player.dirX = -1.0;
+                player.dirY = 0.0;
+                player.planeX = 0.0;
+                player.planeY = 0.66;
+                playerDamageTimer = 0.0;
+                
+                for (auto& sprite : sprites) {
+                    sprite.state = 1;
+                    sprite.hp = 100;
+                    sprite.x = sprite.spawnX;
+                    sprite.y = sprite.spawnY;
+                    sprite.deadTimer = 0;
+                    sprite.damageTimer = 0;
+                }
+                currentState = GameState::MENU;
+            }
+        }
     }
 
     // ==========================================
@@ -348,8 +389,19 @@ void Engine::processInput(double deltaTime) {
             if (dist < 8.0 && dist > 0.6) {
                 // Nepřítel pronásleduje hráče
                 double speed = 1.5 * deltaTime;
-                sprite.x += (dx / dist) * speed;
-                sprite.y += (dy / dist) * speed;
+                double moveX = (dx / dist) * speed;
+                double moveY = (dy / dist) * speed;
+                
+                double sBufferX = (moveX > 0) ? 0.2 : -0.2;
+                double sBufferY = (moveY > 0) ? 0.2 : -0.2;
+
+                // Kolize pro nepřítele, aby nelezl přes zdi
+                if (worldMap[int(sprite.x + moveX + sBufferX)][int(sprite.y)] == 0) {
+                    sprite.x += moveX;
+                }
+                if (worldMap[int(sprite.x)][int(sprite.y + moveY + sBufferY)] == 0) {
+                    sprite.y += moveY;
+                }
             } else if (dist <= 0.6) {
                 // Nepřítel útočí
                 if ((rand() % 100) < 5) { 
@@ -360,9 +412,13 @@ void Engine::processInput(double deltaTime) {
         }
 
         if (playerDamageTimer > 0) playerDamageTimer -= deltaTime;
+        
         if (player.hp <= 0) {
             player.hp = 0;
-            currentState = GameState::MENU; // Návrat do menu při úmrtí
+            if (currentState != GameState::GAME_OVER) {
+                currentState = GameState::GAME_OVER; 
+                gameOverTimer = 1.5; // Ochrana před okamžitým přeskočením (1.5 sekundy)
+            }
         }
 
         // --- AKTUALIZACE HOUPÁNÍ ZBRANĚ ---
@@ -372,6 +428,9 @@ void Engine::processInput(double deltaTime) {
             weaponBobTime = 0; // Plynulý návrat do klidu
         }
     }
+
+    // Časovač game over (musí běžet nezávisle na PLAYING stavu)
+    if (gameOverTimer > 0) gameOverTimer -= deltaTime;
 }
 
 void Engine::drawRect(int startX, int startY, int width, int height, uint32_t color) {
@@ -551,6 +610,23 @@ void Engine::render() {
         // --- C. HERNÍ MENU ---
         // Vykreslí poloprůhledné pozadí a 3 velká tlačítka přes hru
         drawMenu();
+    }
+    else if (currentState == GameState::GAME_OVER) {
+        // --- D. DEATH SCREEN ---
+        if (!deathTexture.empty() && deathTexWidth > 0 && deathTexHeight > 0) {
+            for (int y = 0; y < screenHeight; y++) {
+                for (int x = 0; x < screenWidth; x++) {
+                    int srcX = (x * deathTexWidth) / screenWidth;
+                    int srcY = (y * deathTexHeight) / screenHeight;
+                    framebuffer[y * screenWidth + x] = deathTexture[srcY * deathTexWidth + srcX];
+                }
+            }
+        } else {
+            for (int i = 0; i < screenWidth * screenHeight; i++) framebuffer[i] = 0xFF440000;
+        }
+
+        drawText("YOU DIED", screenWidth / 2 - 80, screenHeight / 2 - 50, 0xFFFF0000, 4);
+        drawText("PRESS ANY KEY TO RETURN", screenWidth / 2 - 110, screenHeight / 2 + 50, 0xFFFFFFFF, 2);
     }
 
     // =========================================================

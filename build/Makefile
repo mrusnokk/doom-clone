@@ -128,77 +128,77 @@ voxel_project/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/build
 .PHONY : voxel_project/fast
 
-Engine.obj: Engine.cpp.obj
-.PHONY : Engine.obj
+src/engine.obj: src/engine.cpp.obj
+.PHONY : src/engine.obj
 
 # target to build an object file
-Engine.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/Engine.cpp.obj
-.PHONY : Engine.cpp.obj
+src/engine.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/src/engine.cpp.obj
+.PHONY : src/engine.cpp.obj
 
-Engine.i: Engine.cpp.i
-.PHONY : Engine.i
+src/engine.i: src/engine.cpp.i
+.PHONY : src/engine.i
 
 # target to preprocess a source file
-Engine.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/Engine.cpp.i
-.PHONY : Engine.cpp.i
+src/engine.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/src/engine.cpp.i
+.PHONY : src/engine.cpp.i
 
-Engine.s: Engine.cpp.s
-.PHONY : Engine.s
+src/engine.s: src/engine.cpp.s
+.PHONY : src/engine.s
 
 # target to generate assembly for a file
-Engine.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/Engine.cpp.s
-.PHONY : Engine.cpp.s
+src/engine.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/src/engine.cpp.s
+.PHONY : src/engine.cpp.s
 
-Raycaster.obj: Raycaster.cpp.obj
-.PHONY : Raycaster.obj
+src/main.obj: src/main.cpp.obj
+.PHONY : src/main.obj
 
 # target to build an object file
-Raycaster.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/Raycaster.cpp.obj
-.PHONY : Raycaster.cpp.obj
+src/main.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/src/main.cpp.obj
+.PHONY : src/main.cpp.obj
 
-Raycaster.i: Raycaster.cpp.i
-.PHONY : Raycaster.i
+src/main.i: src/main.cpp.i
+.PHONY : src/main.i
 
 # target to preprocess a source file
-Raycaster.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/Raycaster.cpp.i
-.PHONY : Raycaster.cpp.i
+src/main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/src/main.cpp.i
+.PHONY : src/main.cpp.i
 
-Raycaster.s: Raycaster.cpp.s
-.PHONY : Raycaster.s
+src/main.s: src/main.cpp.s
+.PHONY : src/main.s
 
 # target to generate assembly for a file
-Raycaster.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/Raycaster.cpp.s
-.PHONY : Raycaster.cpp.s
+src/main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/src/main.cpp.s
+.PHONY : src/main.cpp.s
 
-main.obj: main.cpp.obj
-.PHONY : main.obj
+src/raycaster.obj: src/raycaster.cpp.obj
+.PHONY : src/raycaster.obj
 
 # target to build an object file
-main.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/main.cpp.obj
-.PHONY : main.cpp.obj
+src/raycaster.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/src/raycaster.cpp.obj
+.PHONY : src/raycaster.cpp.obj
 
-main.i: main.cpp.i
-.PHONY : main.i
+src/raycaster.i: src/raycaster.cpp.i
+.PHONY : src/raycaster.i
 
 # target to preprocess a source file
-main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/main.cpp.i
-.PHONY : main.cpp.i
+src/raycaster.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/src/raycaster.cpp.i
+.PHONY : src/raycaster.cpp.i
 
-main.s: main.cpp.s
-.PHONY : main.s
+src/raycaster.s: src/raycaster.cpp.s
+.PHONY : src/raycaster.s
 
 # target to generate assembly for a file
-main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/main.cpp.s
-.PHONY : main.cpp.s
+src/raycaster.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\voxel_project.dir\build.make CMakeFiles/voxel_project.dir/src/raycaster.cpp.s
+.PHONY : src/raycaster.cpp.s
 
 # Help Target
 help:
@@ -209,15 +209,15 @@ help:
 	@echo ... edit_cache
 	@echo ... rebuild_cache
 	@echo ... voxel_project
-	@echo ... Engine.obj
-	@echo ... Engine.i
-	@echo ... Engine.s
-	@echo ... Raycaster.obj
-	@echo ... Raycaster.i
-	@echo ... Raycaster.s
-	@echo ... main.obj
-	@echo ... main.i
-	@echo ... main.s
+	@echo ... src/engine.obj
+	@echo ... src/engine.i
+	@echo ... src/engine.s
+	@echo ... src/main.obj
+	@echo ... src/main.i
+	@echo ... src/main.s
+	@echo ... src/raycaster.obj
+	@echo ... src/raycaster.i
+	@echo ... src/raycaster.s
 .PHONY : help
 
 
