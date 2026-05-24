@@ -66,29 +66,32 @@ void Raycaster::render(std::vector<uint32_t>& framebuffer, int screenWidth, int 
             if (side == 0) perpWallDist = (mapX - player.x + (1 - stepX) / 2.0) / rayDirX;
             else           perpWallDist = (mapY - player.y + (1 - stepY) / 2.0) / rayDirY;
 
+            int zMove = int(player.z / perpWallDist);
+
             if (perpWallDist <= 0) perpWallDist = 0.1;
             int lineHeight = (int)(screenHeight / perpWallDist);
 
-            int drawStart = -lineHeight / 2 + screenHeight / 2;
+            int drawStart = -lineHeight / 2 + screenHeight / 2 + zMove;
             if (drawStart < 0) drawStart = 0;
-            int drawEnd = lineHeight / 2 + screenHeight / 2;
+            int drawEnd = lineHeight / 2 + screenHeight / 2 + zMove;
             if (drawEnd >= screenHeight) drawEnd = screenHeight - 1;
 
             // --- VÝPOČET TEXTURY ---
-            double wallX; // Kde přesně paprsek zasáhl zeď (potřebujeme zlomkovou část)
+            int texNum = worldMap[mapX][mapY] - 1; // 1 odečteme pro index pole
+            if (texNum < 0) texNum = 0;
+
+            double wallX; 
             if (side == 0) wallX = player.y + perpWallDist * rayDirY;
             else           wallX = player.x + perpWallDist * rayDirX;
-            wallX -= std::floor(wallX); // Ořízneme celočíselnou část (necháme jen např. 0.35)
+            wallX -= floor((wallX));
 
-            // X souřadnice na textuře
             int texX = int(wallX * double(TEX_WIDTH));
-            // Otočení textury na určitých stěnách, aby nebyla zrcadlově obrácená
             if (side == 0 && rayDirX > 0) texX = TEX_WIDTH - texX - 1;
             if (side == 1 && rayDirY < 0) texX = TEX_WIDTH - texX - 1;
 
             // Kolik posunout texturu vertikálně na každý pixel obrazovky
             double step = 1.0 * TEX_HEIGHT / lineHeight;
-            double texPos = (drawStart - screenHeight / 2 + lineHeight / 2) * step;
+            double texPos = (drawStart - zMove - screenHeight / 2 + lineHeight / 2) * step;
 
             zBuffer[x] = perpWallDist;
 
@@ -116,42 +119,48 @@ void Raycaster::render(std::vector<uint32_t>& framebuffer, int screenWidth, int 
                 
                 if (y < drawStart) {
                     // Strop
-                    double currentDist = screenHeight / (2.0 * (screenHeight - y) - screenHeight);
-                    double weight = currentDist / distWall;
-                    double currentFloorX = weight * floorXWall + (1.0 - weight) * player.x;
-                    double currentFloorY = weight * floorYWall + (1.0 - weight) * player.y;
+                    double p = screenHeight / 2.0 - y;
+                    if (p > 0) {
+                        double currentDistCeil = (0.5 * screenHeight - player.z) / p;
+                        double weight = currentDistCeil / distWall;
+                        double currentFloorX = weight * floorXWall + (1.0 - weight) * player.x;
+                        double currentFloorY = weight * floorYWall + (1.0 - weight) * player.y;
 
-                    int floorTexX = int(currentFloorX * TEX_WIDTH) % TEX_WIDTH;
-                    int floorTexY = int(currentFloorY * TEX_HEIGHT) % TEX_HEIGHT;
-                    if (floorTexX < 0) floorTexX += TEX_WIDTH;
-                    if (floorTexY < 0) floorTexY += TEX_HEIGHT;
+                        int floorTexX = int(currentFloorX * TEX_WIDTH) % TEX_WIDTH;
+                        int floorTexY = int(currentFloorY * TEX_HEIGHT) % TEX_HEIGHT;
+                        if (floorTexX < 0) floorTexX += TEX_WIDTH;
+                        if (floorTexY < 0) floorTexY += TEX_HEIGHT;
 
-                    framebuffer[pixelIndex] = ceilTexture[TEX_HEIGHT * floorTexY + floorTexX];
+                        framebuffer[pixelIndex] = ceilTexture[TEX_HEIGHT * floorTexY + floorTexX];
+                    }
                 } else if (y >= drawStart && y <= drawEnd) {
                     // ZED
                     int texY = (int)texPos & (TEX_HEIGHT - 1);
                     texPos += step;
                     
-                    int texNum = worldMap[mapX][mapY];
-                    if (texNum < 1 || texNum > 3) texNum = 1;
-                    uint32_t color = textures[texNum][TEX_HEIGHT * texY + texX];
+                    int texNumMap = worldMap[mapX][mapY];
+                    if (texNumMap < 1 || texNumMap > 3) texNumMap = 1;
+                    uint32_t color = textures[texNumMap][TEX_HEIGHT * texY + texX];
                     
                     if (side == 1) color = (color >> 1) & 8355711;
                     
                     framebuffer[pixelIndex] = color;
                 } else {
                     // Podlaha
-                    double currentDist = screenHeight / (2.0 * y - screenHeight);
-                    double weight = currentDist / distWall;
-                    double currentFloorX = weight * floorXWall + (1.0 - weight) * player.x;
-                    double currentFloorY = weight * floorYWall + (1.0 - weight) * player.y;
+                    double p = y - screenHeight / 2.0;
+                    if (p > 0) {
+                        double currentDistFloor = (0.5 * screenHeight + player.z) / p;
+                        double weight = currentDistFloor / distWall;
+                        double currentFloorX = weight * floorXWall + (1.0 - weight) * player.x;
+                        double currentFloorY = weight * floorYWall + (1.0 - weight) * player.y;
 
-                    int floorTexX = int(currentFloorX * TEX_WIDTH) % TEX_WIDTH;
-                    int floorTexY = int(currentFloorY * TEX_HEIGHT) % TEX_HEIGHT;
-                    if (floorTexX < 0) floorTexX += TEX_WIDTH;
-                    if (floorTexY < 0) floorTexY += TEX_HEIGHT;
+                        int floorTexX = int(currentFloorX * TEX_WIDTH) % TEX_WIDTH;
+                        int floorTexY = int(currentFloorY * TEX_HEIGHT) % TEX_HEIGHT;
+                        if (floorTexX < 0) floorTexX += TEX_WIDTH;
+                        if (floorTexY < 0) floorTexY += TEX_HEIGHT;
 
-                    framebuffer[pixelIndex] = floorTexture[TEX_HEIGHT * floorTexY + floorTexX];
+                        framebuffer[pixelIndex] = floorTexture[TEX_HEIGHT * floorTexY + floorTexX];
+                    }
                 }
             }
         }
@@ -182,6 +191,8 @@ void Raycaster::renderSprites(std::vector<uint32_t>& framebuffer, int screenWidt
 
     for(size_t i = 0; i < sprites.size(); i++) {
         int spriteIdx = spriteOrder[i].second;
+        if (sprites[spriteIdx].state == 0) continue; // Mrtvé nekreslíme
+
         double spriteX = sprites[spriteIdx].x - player.x;
         double spriteY = sprites[spriteIdx].y - player.y;
 
@@ -194,10 +205,12 @@ void Raycaster::renderSprites(std::vector<uint32_t>& framebuffer, int screenWidt
 
         int spriteScreenX = int((screenWidth / 2) * (1 + transformX / transformY));
         
+        int vMoveScreen = int(player.z / transformY);
+        
         int spriteHeight = std::abs(int(screenHeight / transformY));
-        int drawStartY = -spriteHeight / 2 + screenHeight / 2;
+        int drawStartY = -spriteHeight / 2 + screenHeight / 2 + vMoveScreen;
         if(drawStartY < 0) drawStartY = 0;
-        int drawEndY = spriteHeight / 2 + screenHeight / 2;
+        int drawEndY = spriteHeight / 2 + screenHeight / 2 + vMoveScreen;
         if(drawEndY >= screenHeight) drawEndY = screenHeight - 1;
 
         int spriteWidth = std::abs(int(screenHeight / transformY));
@@ -208,14 +221,15 @@ void Raycaster::renderSprites(std::vector<uint32_t>& framebuffer, int screenWidt
 
         for(int stripe = drawStartX; stripe < drawEndX; stripe++) {
             int texX = int(256 * (stripe - (-spriteWidth / 2 + spriteScreenX)) * TEX_WIDTH / spriteWidth) / 256;
-            // Podmínka pro vykreslení:
-            // 1) je to uvnitř obrazovky, 2) Z-Buffer check, 3) sprite není za námi
             if(transformY > 0 && stripe > 0 && stripe < screenWidth && transformY < zBuffer[stripe]) {
                 for(int y = drawStartY; y < drawEndY; y++) {
-                    int d = y * 256 - screenHeight * 128 + spriteHeight * 128; // 256 and 128 factors to avoid floats
+                    int d = (y - vMoveScreen) * 256 - screenHeight * 128 + spriteHeight * 128;
                     int texY = ((d * TEX_HEIGHT) / spriteHeight) / 256;
                     uint32_t color = enemyTexture[TEX_HEIGHT * texY + texX];
-                    if((color & 0x00FFFFFF) != 0) { // Pokud není černá (průhledná)
+                    if((color & 0x00FFFFFF) != 0) { 
+                        if (sprites[spriteIdx].damageTimer > 0) {
+                            color = 0xFFFF0000; // Červená barva při zasažení
+                        }
                         framebuffer[y * screenWidth + stripe] = color;
                     }
                 }

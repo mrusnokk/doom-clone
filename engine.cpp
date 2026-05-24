@@ -36,11 +36,16 @@ Engine::Engine(int width, int height)
     }
 
     zBuffer.resize(screenWidth);
-    // Přidáme pár testovacích spritů (nepřátel)
+    // Vytvoření hordy nepřátel na velkou mapu
     sprites = {
-        {8.5, 8.5, 1},
-        {10.5, 9.5, 1},
-        {13.5, 3.5, 1}
+        {8.5, 8.5, 1, 100, 1, 0, 8.5, 8.5, 0},
+        {10.5, 9.5, 1, 100, 1, 0, 10.5, 9.5, 0},
+        {13.5, 3.5, 1, 100, 1, 0, 13.5, 3.5, 0},
+        {22.5, 15.5, 1, 100, 1, 0, 22.5, 15.5, 0},
+        {20.5, 20.5, 1, 100, 1, 0, 20.5, 20.5, 0},
+        {5.5, 25.5, 1, 100, 1, 0, 5.5, 25.5, 0},
+        {15.5, 28.5, 1, 100, 1, 0, 15.5, 28.5, 0},
+        {28.5, 4.5, 1, 100, 1, 0, 28.5, 4.5, 0}
     };
 
     // Pomocná funkce pro načtení textury pomocí stb_image
@@ -220,6 +225,35 @@ void Engine::processInput(double deltaTime) {
             if (!isShooting) {
                 isShooting = true;
                 shootTimer = 0.15; // Animace výstřelu trvá 0.15 sekund
+
+                // Hitscan
+                for (auto& sprite : sprites) {
+                    if (sprite.state == 0) continue;
+                    
+                    double spriteX = sprite.x - player.x;
+                    double spriteY = sprite.y - player.y;
+
+                    double invDet = 1.0 / (player.planeX * player.dirY - player.dirX * player.planeY);
+                    double transformX = invDet * (player.dirY * spriteX - player.dirX * spriteY);
+                    double transformY = invDet * (-player.planeY * spriteX + player.planeX * spriteY);
+
+                    if (transformY > 0) {
+                        int spriteScreenX = int((screenWidth / 2) * (1 + transformX / transformY));
+                        int spriteWidth = std::abs(int(screenHeight / transformY));
+                        
+                        // Zkontrolujeme, jestli je střed obrazovky uvnitř šířky spritu
+                        if (screenWidth / 2 > spriteScreenX - spriteWidth / 2 && screenWidth / 2 < spriteScreenX + spriteWidth / 2) {
+                            if (transformY < 15.0) { // Dostřel
+                                sprite.hp -= 35;
+                                sprite.damageTimer = 0.2; 
+                                if (sprite.hp <= 0) {
+                                    sprite.state = 0; 
+                                    sprite.deadTimer = 5.0; // 5 sekund do respawnu
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -242,8 +276,6 @@ void Engine::processInput(double deltaTime) {
         // Zvětšíme buffer pro kolize (Wall sliding)
         double bufferX = (player.dirX > 0 ? 0.2 : -0.2);
         double bufferY = (player.dirY > 0 ? 0.2 : -0.2);
-        double bufferPX = (player.planeX > 0 ? 0.2 : -0.2);
-        double bufferPY = (player.planeY > 0 ? 0.2 : -0.2);
         
         isMoving = false; // Reset detekce pohybu pro zbraň
 
@@ -262,14 +294,75 @@ void Engine::processInput(double deltaTime) {
         // Úkrok doleva (A)
         if (keystate[SDL_SCANCODE_A]) {
             isMoving = true;
-            if (worldMap[int(player.x - player.planeX * moveSpeed - bufferPX)][int(player.y)] == 0) player.x -= player.planeX * moveSpeed;
-            if (worldMap[int(player.x)][int(player.y - player.planeY * moveSpeed - bufferPY)] == 0) player.y -= player.planeY * moveSpeed;
+            double strafeX = -player.dirY;
+            double strafeY = player.dirX;
+            double sBufferX = (strafeX > 0) ? 0.2 : -0.2;
+            double sBufferY = (strafeY > 0) ? 0.2 : -0.2;
+            if (worldMap[int(player.x + strafeX * moveSpeed + sBufferX)][int(player.y)] == 0) player.x += strafeX * moveSpeed;
+            if (worldMap[int(player.x)][int(player.y + strafeY * moveSpeed + sBufferY)] == 0) player.y += strafeY * moveSpeed;
         }
         // Úkrok doprava (D)
         if (keystate[SDL_SCANCODE_D]) {
             isMoving = true;
-            if (worldMap[int(player.x + player.planeX * moveSpeed + bufferPX)][int(player.y)] == 0) player.x += player.planeX * moveSpeed;
-            if (worldMap[int(player.x)][int(player.y + player.planeY * moveSpeed + bufferPY)] == 0) player.y += player.planeY * moveSpeed;
+            double strafeX = player.dirY;
+            double strafeY = -player.dirX;
+            double sBufferX = (strafeX > 0) ? 0.2 : -0.2;
+            double sBufferY = (strafeY > 0) ? 0.2 : -0.2;
+            if (worldMap[int(player.x + strafeX * moveSpeed + sBufferX)][int(player.y)] == 0) player.x += strafeX * moveSpeed;
+            if (worldMap[int(player.x)][int(player.y + strafeY * moveSpeed + sBufferY)] == 0) player.y += strafeY * moveSpeed;
+        }
+
+        // Skákání
+        if (keystate[SDL_SCANCODE_SPACE] && player.z == 0) {
+            player.vz = 300.0;
+        }
+
+        // Gravitace a vertikální pohyb
+        player.z += player.vz * deltaTime;
+        if (player.z > 0) {
+            player.vz -= 900.0 * deltaTime;
+        } else {
+            player.z = 0;
+            player.vz = 0;
+        }
+
+        // --- AI NEPŘÁTEL ---
+        for (auto& sprite : sprites) {
+            if (sprite.state == 0) {
+                sprite.deadTimer -= deltaTime;
+                if (sprite.deadTimer <= 0) {
+                    sprite.state = 1;
+                    sprite.hp = 100;
+                    sprite.x = sprite.spawnX;
+                    sprite.y = sprite.spawnY;
+                }
+                continue;
+            }
+
+            if (sprite.damageTimer > 0) sprite.damageTimer -= deltaTime;
+
+            double dx = player.x - sprite.x;
+            double dy = player.y - sprite.y;
+            double dist = std::sqrt(dx*dx + dy*dy);
+
+            if (dist < 8.0 && dist > 0.6) {
+                // Nepřítel pronásleduje hráče
+                double speed = 1.5 * deltaTime;
+                sprite.x += (dx / dist) * speed;
+                sprite.y += (dy / dist) * speed;
+            } else if (dist <= 0.6) {
+                // Nepřítel útočí
+                if ((rand() % 100) < 5) { 
+                    player.hp -= 5;
+                    playerDamageTimer = 0.2;
+                }
+            }
+        }
+
+        if (playerDamageTimer > 0) playerDamageTimer -= deltaTime;
+        if (player.hp <= 0) {
+            player.hp = 0;
+            currentState = GameState::MENU; // Návrat do menu při úmrtí
         }
 
         // --- AKTUALIZACE HOUPÁNÍ ZBRANĚ ---
@@ -436,6 +529,21 @@ void Engine::render() {
         if (isShooting && shootTimer > 0.05) {
             int flashSize = 60;
             drawRect(screenWidth / 2 - flashSize / 2, startY - flashSize + 10, flashSize, flashSize, 0xFFFFFF00); // Žlutý záblesk
+        }
+
+        // HUD - HP Bar
+        drawRect(20, screenHeight - 40, 200, 20, 0xFFFF0000); // Červené pozadí
+        int hpWidth = (player.hp > 0) ? (player.hp * 2) : 0;
+        drawRect(20, screenHeight - 40, hpWidth, 20, 0xFF00FF00); // Zelené HP
+        drawText("HP: " + std::to_string(player.hp), 25, screenHeight - 38, 0xFFFFFFFF, 2);
+
+        // Zčervenání obrazovky při zranění
+        if (playerDamageTimer > 0) {
+            for (uint32_t& pixel : framebuffer) {
+                uint32_t r = (pixel >> 16) & 0xFF;
+                r = std::min(255u, r + 50u);
+                pixel = (pixel & 0xFF00FFFF) | (r << 16);
+            }
         }
     } 
     else if (currentState == GameState::MENU) {

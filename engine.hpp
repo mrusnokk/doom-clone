@@ -54,6 +54,7 @@ private:
     double weaponBobTime;
     bool isShooting = false;
     double shootTimer = 0.0;
+    double playerDamageTimer = 0.0;
 
     SDL_Window* window;
     SDL_Renderer* renderer;
