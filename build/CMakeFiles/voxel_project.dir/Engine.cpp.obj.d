@@ -182,6 +182,7 @@ CMakeFiles/voxel_project.dir/Engine.cpp.obj: \
  E:\Michael\skola\cpp\projektFinal\Player.hpp \
  E:\Michael\skola\cpp\projektFinal\Raycaster.hpp \
  E:\Michael\skola\cpp\projektFinal\Map.hpp \
+ E:\Michael\skola\cpp\projektFinal\Sprite.hpp \
  C:/msys64/ucrt64/include/c++/15.2.0/iostream \
  C:/msys64/ucrt64/include/c++/15.2.0/ostream \
  C:/msys64/ucrt64/include/c++/15.2.0/bits/ostream.h \
@@ -241,4 +242,10 @@ CMakeFiles/voxel_project.dir/Engine.cpp.obj: \
  C:/msys64/ucrt64/include/c++/15.2.0/tr1/poly_laguerre.tcc \
  C:/msys64/ucrt64/include/c++/15.2.0/tr1/riemann_zeta.tcc \
  E:\Michael\skola\cpp\projektFinal\Weapon.hpp \
- E:\Michael\skola\cpp\projektFinal\Font.hpp
+ E:\Michael\skola\cpp\projektFinal\Font.hpp \
+ E:\Michael\skola\cpp\projektFinal\stb_image.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/math.h \
+ C:/msys64/ucrt64/include/assert.h \
+ C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/emmintrin.h \
+ C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/xmmintrin.h \
+ C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/mmintrin.h

@@ -181,4 +181,5 @@ CMakeFiles/voxel_project.dir/main.cpp.obj: \
  C:/msys64/ucrt64/include/c++/15.2.0/bits/basic_string.tcc \
  E:\Michael\skola\cpp\projektFinal\Player.hpp \
  E:\Michael\skola\cpp\projektFinal\Raycaster.hpp \
- E:\Michael\skola\cpp\projektFinal\Map.hpp
+ E:\Michael\skola\cpp\projektFinal\Map.hpp \
+ E:\Michael\skola\cpp\projektFinal\Sprite.hpp

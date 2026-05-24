@@ -73,6 +73,7 @@ CMakeFiles/voxel_project.dir/Raycaster.cpp.obj: \
  C:/msys64/ucrt64/include/stdint.h \
  E:\Michael\skola\cpp\projektFinal\Player.hpp \
  E:\Michael\skola\cpp\projektFinal\Map.hpp \
+ E:\Michael\skola\cpp\projektFinal\Sprite.hpp \
  C:/msys64/ucrt64/include/c++/15.2.0/cmath \
  C:/msys64/ucrt64/include/math.h \
  C:/msys64/ucrt64/include/c++/15.2.0/bits/std_abs.h \
@@ -188,4 +189,79 @@ CMakeFiles/voxel_project.dir/Raycaster.cpp.obj: \
  C:/msys64/ucrt64/include/c++/15.2.0/bits/parse_numbers.h \
  C:/msys64/ucrt64/include/c++/15.2.0/bits/atomic_timed_wait.h \
  C:/msys64/ucrt64/include/c++/15.2.0/bits/this_thread_sleep.h \
- C:/msys64/ucrt64/include/semaphore.h
+ C:/msys64/ucrt64/include/semaphore.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/algorithm \
+ C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_algo.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/bits/algorithmfwd.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_heap.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/bits/uniform_int_dist.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_tempbuf.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/bits/ranges_algo.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/bits/ranges_algobase.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/pstl/glue_algorithm_defs.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/pstl/execution_defs.h \
+ E:\Michael\skola\cpp\projektFinal\Engine.hpp \
+ C:/msys64/ucrt64/include/SDL3/SDL.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_stdinc.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_platform_defines.h \
+ C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/stdarg.h \
+ C:/msys64/ucrt64/include/stdarg.h \
+ C:/msys64/ucrt64/include/_mingw_stdarg.h \
+ C:/msys64/ucrt64/include/string.h \
+ C:/msys64/ucrt64/include/sec_api/string_s.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_begin_code.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_close_code.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_assert.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_asyncio.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_atomic.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_audio.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_endian.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_error.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_mutex.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_thread.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_properties.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_iostream.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_bits.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_blendmode.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_camera.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_pixels.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_surface.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_rect.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_clipboard.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_cpuinfo.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_dialog.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_video.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_events.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_gamepad.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_guid.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_joystick.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_power.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_sensor.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_keyboard.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_keycode.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_scancode.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_mouse.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_pen.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_touch.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_filesystem.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_gpu.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_haptic.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_hidapi.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_hints.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_init.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_loadso.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_locale.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_log.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_messagebox.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_metal.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_misc.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_platform.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_process.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_render.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_storage.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_system.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_time.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_timer.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_tray.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_version.h \
+ C:/msys64/ucrt64/include/SDL3/SDL_oldnames.h
