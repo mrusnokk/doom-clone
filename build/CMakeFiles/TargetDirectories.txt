@@ -1,3 +1,0 @@
-E:/Michael/skola/cpp/projektFinal/build/CMakeFiles/voxel_project.dir
-E:/Michael/skola/cpp/projektFinal/build/CMakeFiles/edit_cache.dir
-E:/Michael/skola/cpp/projektFinal/build/CMakeFiles/rebuild_cache.dir

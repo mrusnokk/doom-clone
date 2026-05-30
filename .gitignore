@@ -1,0 +1,5 @@
+﻿build/
+*.py
+*.exe
+extracted.txt
+debug*.txt

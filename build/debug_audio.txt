@@ -1,3 +1,0 @@
-SDL_InitSubSystem(AUDIO) success
-SDL_OpenAudioDevice success: 45
-SDL_ResumeAudioDevice success
