@@ -1,7 +1,7 @@
 # Retro Raycasting Engine in C++ 🎮
 
 Welcome to this custom-built 3D Raycasting Engine written in raw C++! 
-This project is deeply inspired by classic 90s shooters like *DOOM* and *Wolfenstein 3D*, built from scratch to render a pseudo-3D world using software raycasting and SDL2.
+This project is deeply inspired by classic 90s shooters like *DOOM* and *Wolfenstein 3D*, built from scratch to render a pseudo-3D world using software raycasting and SDL3.
 
 ## 🌟 Key Features
 
@@ -15,17 +15,17 @@ This project is deeply inspired by classic 90s shooters like *DOOM* and *Wolfens
 ## 🛠️ Technology Stack
 
 * **Language:** C++17
-* **Graphics/Windowing:** SDL2 (Simple DirectMedia Layer)
+* **Graphics/Windowing:** SDL3 (Simple DirectMedia Layer)
 * **Audio:** SDL_Audio + stb_vorbis
 * **Build System:** CMake
 
 ## 🚀 How to Build
 
 Make sure you have a modern C++ compiler (e.g., GCC, MSVC, Clang) and CMake installed. 
-You will also need the SDL2 development libraries.
+You will also need the SDL3 development libraries.
 
 1. Clone this repository.
-2. Ensure SDL2 is installed and correctly configured in your PATH or CMake environment.
+2. Ensure SDL3 is installed and correctly configured in your PATH or CMake environment.
 3. Generate the build files:
    ```bash
    mkdir build
