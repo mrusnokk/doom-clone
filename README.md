@@ -44,7 +44,8 @@ Run the compiled executable `voxel_project.exe`.
 **Controls:**
 * `W` `A` `S` `D` - Move and strafe
 * `Mouse` - Look around (turn left / right)
-* `Space` - Open doors
+* `Space` - Jump
+* `E` - Open doors
 * `Left Click` - Fire weapon
 
 ## 📜 Credits
