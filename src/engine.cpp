@@ -1,6 +1,8 @@
 #include "Engine.hpp"
 #include <iostream>
-#include <cmath>   // Pro sin() a cos()
+#include <cmath>
+#include <filesystem>
+#include <algorithm>   // Pro sin() a cos()
 #include "Map.hpp" // Potřebujeme vidět mapu kvůli kolizím
 #include "Font.hpp"
 
@@ -40,18 +42,49 @@ Engine::Engine(int width, int height)
 
     zBuffer.resize(screenWidth);
     // Vytvoření hordy nepřátel na velkou mapu
-    sprites = {
-        {8.5, 8.5, 1, 100, 1, 0, 8.5, 8.5, 0},
-        {10.5, 9.5, 1, 100, 1, 0, 10.5, 9.5, 0},
-        {13.5, 3.5, 1, 100, 1, 0, 13.5, 3.5, 0},
-        {22.5, 15.5, 1, 100, 1, 0, 22.5, 15.5, 0},
-        {20.5, 20.5, 1, 100, 1, 0, 20.5, 20.5, 0},
-        {5.5, 25.5, 1, 100, 1, 0, 5.5, 25.5, 0},
-        {15.5, 28.5, 1, 100, 1, 0, 15.5, 28.5, 0},
-        {28.5, 4.5, 1, 100, 1, 0, 28.5, 4.5, 0}
+    
+    auto loadProj = [&](const std::string& prefix, std::vector<SpriteFrame>& frames) {
+        for (int i = 0; i < 26; ++i) {
+            char suffix = 'A' + i;
+            std::string path1 = "assets/SPRITES/PROJECTILES/" + prefix + suffix + "0.png";
+            std::string path2 = "assets/SPRITES/PROJECTILES/" + prefix + suffix + "0.PNG";
+            std::string path = std::filesystem::exists(path1) ? path1 : (std::filesystem::exists(path2) ? path2 : "");
+            if (!path.empty()) {
+                SpriteFrame frame;
+                int channels;
+                unsigned char* data = stbi_load(path.c_str(), &frame.w, &frame.h, &channels, 4);
+                if (data) {
+                    frame.pixels.assign((uint32_t*)data, (uint32_t*)data + (frame.w * frame.h));
+                    stbi_image_free(data);
+                    frames.push_back(frame);
+                }
+            } else {
+                break; // Stop loading if frame doesn't exist
+            }
+        }
     };
+    std::vector<SpriteFrame> p0, p1, p2;
+    loadProj("AGAS", p0); // Agaures projectile
+    loadProj("BCAB", p1); // Cacobite projectile
+    loadProj("BLTR", p2); // Arachnobaron projectile
+    projectileTypes.push_back(p0);
+    projectileTypes.push_back(p1);
+    projectileTypes.push_back(p2);
 
-    // Pomocná funkce pro načtení textury pomocí stb_image
+    EnemyDef type0; loadEnemyDef("assets/SPRITES/ENEMIES/Agaures", type0); type0.maxHp = 100; if (!type0.idleFrames.empty()) enemyTypes.push_back(type0);
+    EnemyDef type1; loadEnemyDef("assets/SPRITES/ENEMIES/Cacobite", type1); type1.maxHp = 200; if (!type1.idleFrames.empty()) enemyTypes.push_back(type1);
+    EnemyDef type2; loadEnemyDef("assets/SPRITES/ENEMIES/Arachnobaron", type2); type2.maxHp = 300; if (!type2.idleFrames.empty()) enemyTypes.push_back(type2);
+    sprites = {
+        {8.5, 8.5, 0, 0, 100, 1, 0.0, 8.5, 8.5, 0.0, 0.0, 0, 0.0},
+        {10.5, 9.5, 0, 0, 100, 1, 0.0, 10.5, 9.5, 0.0, 0.0, 0, 0.0},
+        {13.5, 3.5, 0, 0, 100, 1, 0.0, 13.5, 3.5, 0.0, 0.0, 0, 0.0},
+        {22.5, 15.5, 0, 1, 200, 1, 0.0, 22.5, 15.5, 0.0, 0.0, 0, 0.0},
+        {20.5, 20.5, 0, 1, 200, 1, 0.0, 20.5, 20.5, 0.0, 0.0, 0, 0.0},
+        {5.5, 25.5, 0, 0, 100, 1, 0.0, 5.5, 25.5, 0.0, 0.0, 0, 0.0},
+        {15.5, 28.5, 0, 1, 200, 1, 0.0, 15.5, 28.5, 0.0, 0.0, 0, 0.0},
+        {28.5, 4.5, 0, 2, 300, 1, 0.0, 28.5, 4.5, 0.0, 0.0, 0, 0.0}
+    };
+// Pomocná funkce pro načtení textury pomocí stb_image
     auto loadTex = [](const char* path, uint32_t* texArray) {
         int w, h, channels;
         unsigned char* data = stbi_load(path, &w, &h, &channels, 4);
@@ -173,24 +206,32 @@ Engine::Engine(int width, int height)
     // --- AUDIO SYSTEM ---
     audioDevice = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr);
     if (audioDevice) {
+        SDL_ResumeAudioDevice(audioDevice);
         int channels = 0, sample_rate = 0;
         short* decoded_data = nullptr;
-        // Načteme jeden ze zvuků výstřelu
-        int samples = stb_vorbis_decode_filename("SOUNDS/AUT9FIRC.ogg", &channels, &sample_rate, &decoded_data);
+                int samples = stb_vorbis_decode_filename("assets/SOUNDS/AUT9FIRC.ogg", &channels, &sample_rate, &decoded_data);
+        if (samples <= 0) samples = stb_vorbis_decode_filename("SOUNDS/AUT9FIRC.ogg", &channels, &sample_rate, &decoded_data);
         if (samples > 0 && decoded_data) {
             weaponAudioData = decoded_data;
             weaponAudioSamples = samples * channels;
-            
+            weaponAudioRate = sample_rate;
+            weaponAudioChannels = channels;
             SDL_AudioSpec spec;
-            spec.format = SDL_AUDIO_S16LE; // 16-bit PCM z stb_vorbis
+            spec.format = SDL_AUDIO_S16LE;
             spec.channels = channels;
             spec.freq = sample_rate;
-            
-            weaponAudioStream = SDL_CreateAudioStream(&spec, nullptr); // nullptr znamená "přizpůsob se zařízení"
-            if (weaponAudioStream) {
-                SDL_BindAudioStream(audioDevice, weaponAudioStream);
-            }
+            weaponAudioStream = SDL_CreateAudioStream(&spec, nullptr);
+            if (weaponAudioStream) SDL_BindAudioStream(audioDevice, weaponAudioStream);
         }
+        samples = stb_vorbis_decode_filename("assets/SOUNDS/AGURPAIN.ogg", &channels, &sample_rate, &decoded_data);
+        if (samples <= 0) samples = stb_vorbis_decode_filename("SOUNDS/AGURPAIN.ogg", &channels, &sample_rate, &decoded_data);
+        if (samples > 0 && decoded_data) {
+            playerPainData = decoded_data;
+            playerPainSamples = samples * channels;
+            playerPainRate = sample_rate;
+            playerPainChannels = channels;
+        }
+
     }
 }
 
@@ -359,11 +400,13 @@ void Engine::processInput(double deltaTime) {
                 if (weaponAudioStream && weaponAudioData) {
                     SDL_PutAudioStreamData(weaponAudioStream, weaponAudioData, weaponAudioSamples * sizeof(short));
                     SDL_FlushAudioStream(weaponAudioStream);
+                    SDL_FlushAudioStream(weaponAudioStream);
                 }
 
                 // Hitscan
                 for (auto& sprite : sprites) {
-                    if (sprite.state == 0) continue;
+                    if (sprite.state <= 0) continue;
+                    if (sprite.isProjectile) continue;
                     
                     double spriteX = sprite.x - player.x;
                     double spriteY = sprite.y - player.y;
@@ -381,9 +424,21 @@ void Engine::processInput(double deltaTime) {
                             if (transformY < 15.0) { // Dostřel
                                 sprite.hp -= 35;
                                 sprite.damageTimer = 0.2; 
-                                if (sprite.hp <= 0) {
+                                if (sprite.hp <= 0 && sprite.state != 0) {
                                     sprite.state = 0; 
+                                    sprite.animTimer = 0;
+                                    sprite.frameIndex = 0;
                                     sprite.deadTimer = 5.0; // 5 sekund do respawnu
+                                    if (sprite.type >= 0 && sprite.type < enemyTypes.size()) {
+                                        playSound(enemyTypes[sprite.type].soundDeath, enemyTypes[sprite.type].soundDeathSamples, enemyTypes[sprite.type].soundDeathRate, enemyTypes[sprite.type].soundDeathChannels);
+                                    }
+                                } else if (sprite.hp > 0 && sprite.state != 0) {
+                                    sprite.state = 2; // Pain state
+                                    sprite.animTimer = 0;
+                                    sprite.frameIndex = 0;
+                                    if (sprite.type >= 0 && sprite.type < enemyTypes.size()) {
+                                        playSound(enemyTypes[sprite.type].soundPain, enemyTypes[sprite.type].soundPainSamples, enemyTypes[sprite.type].soundPainRate, enemyTypes[sprite.type].soundPainChannels);
+                                    }
                                 }
                             }
                         }
@@ -499,26 +554,91 @@ void Engine::processInput(double deltaTime) {
             player.vz = 0;
         }
 
-        // --- AI NEPŘÁTEL ---
+                // --- AI NEPŘÁTEL A PROJEKTILY ---
+        std::vector<Sprite> newProjectiles;
         for (auto& sprite : sprites) {
-            if (sprite.state == 0) {
-                sprite.deadTimer -= deltaTime;
-                if (sprite.deadTimer <= 0) {
-                    sprite.state = 1;
-                    sprite.hp = 100;
-                    sprite.x = sprite.spawnX;
-                    sprite.y = sprite.spawnY;
+            // Animace sprite
+            sprite.animTimer += deltaTime;
+            if (sprite.animTimer >= 0.15) {
+                sprite.animTimer -= 0.15;
+                int maxFrames = 1;
+                if (sprite.isProjectile) {
+                    if (sprite.type >= 0 && sprite.type < projectileTypes.size()) maxFrames = projectileTypes[sprite.type].size();
+                } else if (sprite.type >= 0 && sprite.type < enemyTypes.size()) {
+                    if (sprite.state == 0) maxFrames = enemyTypes[sprite.type].deathFrames.size();
+                    else if (sprite.state == 1) maxFrames = enemyTypes[sprite.type].idleFrames.size();
+                    else if (sprite.state == 2) maxFrames = enemyTypes[sprite.type].painFrames.size();
+                }
+                if (maxFrames <= 0) maxFrames = 1;
+                
+                sprite.frameIndex++;
+                if (sprite.state == 0) {
+                    if (sprite.frameIndex >= maxFrames) sprite.frameIndex = maxFrames - 1;
+                } else if (sprite.state == 2) {
+                    if (sprite.frameIndex >= maxFrames) {
+                        sprite.state = 1;
+                        sprite.frameIndex = 0;
+                    }
+                } else {
+                    sprite.frameIndex %= maxFrames;
+                }
+            }
+
+            if (sprite.isProjectile) {
+                if (sprite.state == 1) {
+                    sprite.lifeTime -= deltaTime;
+                    if (sprite.lifeTime <= 0) {
+                        sprite.state = 0;
+                    } else {
+                        double moveSpeed = 8.0 * deltaTime;
+                        if (!isWalkable(int(sprite.x + sprite.dx * moveSpeed), int(sprite.y + sprite.dy * moveSpeed))) {
+                            sprite.state = 0;
+                            continue;
+                        }
+                        sprite.x += sprite.dx * moveSpeed;
+                        sprite.y += sprite.dy * moveSpeed;
+                        
+                        double pDist = std::sqrt((player.x - sprite.x)*(player.x - sprite.x) + (player.y - sprite.y)*(player.y - sprite.y));
+                        if (pDist < 0.5) {
+                            sprite.state = 0;
+                            player.hp -= 15;
+                            playerDamageTimer = 0.2;
+                            playSound(playerPainData, playerPainSamples, playerPainRate, playerPainChannels);
+                        }
+                    }
                 }
                 continue;
             }
 
+            if (sprite.state == 0) {
+                sprite.deadTimer -= deltaTime;
+                if (sprite.deadTimer <= 0) {
+                    sprite.state = -1; // Completly disappear
+                }
+                continue;
+            }
+            if (sprite.state == -1) continue;
+
             if (sprite.damageTimer > 0) sprite.damageTimer -= deltaTime;
+            if (sprite.attackCooldown > 0) sprite.attackCooldown -= deltaTime;
 
             double dx = player.x - sprite.x;
             double dy = player.y - sprite.y;
             double dist = std::sqrt(dx*dx + dy*dy);
 
-            if (dist < 8.0 && dist > 0.6) {
+            // Line of sight check
+            bool canSeePlayer = true;
+            int steps = std::max(1, (int)(dist * 10));
+            for(int i=0; i<=steps; i++) {
+                double cx = sprite.x + dx * ((double)i / steps);
+                double cy = sprite.y + dy * ((double)i / steps);
+                if (!isWalkable((int)cx, (int)cy)) {
+                    canSeePlayer = false;
+                    break;
+                }
+            }
+
+            if (canSeePlayer && dist < 8.0 && dist > 0.6) {
                 // Nepřítel pronásleduje hráče
                 double speed = 1.5 * deltaTime;
                 double moveX = (dx / dist) * speed;
@@ -534,14 +654,42 @@ void Engine::processInput(double deltaTime) {
                 if (isWalkable(int(sprite.x), int(sprite.y + moveY + sBufferY))) {
                     sprite.y += moveY;
                 }
-            } else if (dist <= 0.6) {
-                // Nepřítel útočí
-                if ((rand() % 100) < 5) { 
+                
+                // Střelba projektilů
+                if (sprite.attackCooldown <= 0 && (rand() % 100) < 2) {
+                    sprite.attackCooldown = 2.0; // 2 sec cooldown
+                    if (sprite.type >= 0 && sprite.type < enemyTypes.size()) {
+                        playSound(enemyTypes[sprite.type].soundAttack, enemyTypes[sprite.type].soundAttackSamples, enemyTypes[sprite.type].soundAttackRate, enemyTypes[sprite.type].soundAttackChannels);
+                    }
+                    Sprite proj;
+                    proj.x = sprite.x;
+                    proj.y = sprite.y;
+                    proj.isProjectile = true;
+                    proj.type = sprite.type;
+                    proj.hp = 1;
+                    proj.state = 1;
+                    proj.dx = dx / dist;
+                    proj.dy = dy / dist;
+                    proj.lifeTime = 5.0;
+                    newProjectiles.push_back(proj);
+                }
+            } else if (canSeePlayer && dist <= 0.6) {
+                // Nepřítel útočí na blízko
+                if (sprite.attackCooldown <= 0) {
+                    sprite.attackCooldown = 1.5;
                     player.hp -= 5;
                     playerDamageTimer = 0.2;
+                    playSound(playerPainData, playerPainSamples, playerPainRate, playerPainChannels);
+                    if (sprite.type >= 0 && sprite.type < enemyTypes.size()) {
+                        playSound(enemyTypes[sprite.type].soundAttack, enemyTypes[sprite.type].soundAttackSamples, enemyTypes[sprite.type].soundAttackRate, enemyTypes[sprite.type].soundAttackChannels);
+                    }
                 }
             }
         }
+        for (const auto& np : newProjectiles) {
+            sprites.push_back(np);
+        }
+
 
         if (playerDamageTimer > 0) playerDamageTimer -= deltaTime;
         
@@ -719,7 +867,7 @@ void Engine::render() {
     // =========================================================
     // Vykreslujeme vždy, i když jsme v menu, aby hra zůstala "zamrzlá" na pozadí
     raycaster.render(framebuffer, screenWidth, screenHeight, player, textures, zBuffer, doorOffsets);
-    raycaster.renderSprites(framebuffer, screenWidth, screenHeight, player, sprites, zBuffer);
+    raycaster.renderSprites(framebuffer, screenWidth, screenHeight, player, sprites, zBuffer, enemyTypes, projectileTypes);
 
     // =========================================================
     // 2. UI VRSTVA: Rozhodnutí podle stavu hry
@@ -866,4 +1014,99 @@ void Engine::run()
         processInput(deltaTime); // Předáme čas do vstupů
         render();
     }
+}
+
+void Engine::playSound(short* data, int samples, int sampleRate, int channels) {
+    if (!audioDevice || !data || samples <= 0) return;
+    if (activeStreams[currentAudioStream]) {
+        SDL_DestroyAudioStream(activeStreams[currentAudioStream]);
+    }
+    SDL_AudioSpec spec;
+    spec.format = SDL_AUDIO_S16LE;
+    spec.channels = channels;
+    spec.freq = sampleRate;
+    activeStreams[currentAudioStream] = SDL_CreateAudioStream(&spec, nullptr);
+    if (activeStreams[currentAudioStream]) {
+        SDL_BindAudioStream(audioDevice, activeStreams[currentAudioStream]);
+        SDL_PutAudioStreamData(activeStreams[currentAudioStream], data, samples * sizeof(short));
+        SDL_FlushAudioStream(activeStreams[currentAudioStream]);
+    }
+    currentAudioStream = (currentAudioStream + 1) % 8;
+}
+
+
+void Engine::loadEnemyDef(const std::string& directoryPath, EnemyDef& def) {
+    if (!std::filesystem::exists(directoryPath)) return;
+    std::string folderName = std::filesystem::path(directoryPath).filename().string();
+    auto loadDynTexLocal = [](const std::string& path, std::vector<uint32_t>& tex, int& w, int& h) {
+        int channels;
+        unsigned char* data = stbi_load(path.c_str(), &w, &h, &channels, 4);
+        if (data) {
+            tex.resize(w * h);
+            for (int i = 0; i < w * h; i++) {
+                uint8_t r = data[i * 4 + 0], g = data[i * 4 + 1], b = data[i * 4 + 2], a = data[i * 4 + 3];
+                if (r == 0 && g == 255 && b == 255) a = 0;
+                tex[i] = (a << 24) | (r << 16) | (g << 8) | b;
+            }
+            stbi_image_free(data);
+        }
+    };
+    std::vector<std::string> files;
+    for (const auto& entry : std::filesystem::directory_iterator(directoryPath)) {
+        if (entry.path().extension() == ".png" || entry.path().extension() == ".PNG") files.push_back(entry.path().string());
+    }
+    std::sort(files.begin(), files.end());
+    for (const auto& file : files) {
+        std::string filename = std::filesystem::path(file).filename().string();
+        if (filename.find('1') != std::string::npos || filename.find('0') != std::string::npos) {
+            SpriteFrame sf;
+            loadDynTexLocal(file, sf.pixels, sf.w, sf.h);
+            if (!sf.pixels.empty()) {
+                char frameLetter = '\0';
+                for(size_t i=0; i<filename.length(); i++) {
+                    if(filename[i]=='1'||filename[i]=='0') { if(i>0) frameLetter=filename[i-1]; break; }
+                }
+                
+                if (frameLetter != '\0') {
+                    if (folderName == "Agaures") {
+                        if (frameLetter >= 'A' && frameLetter <= 'D') def.idleFrames.push_back(sf);
+                        else if (frameLetter >= 'H' && frameLetter <= 'H') def.painFrames.push_back(sf);
+                        else if (frameLetter >= 'I' && frameLetter <= 'M') def.deathFrames.push_back(sf);
+                    } else if (folderName == "Cacobite") {
+                        if (frameLetter >= 'A' && frameLetter <= 'E') def.idleFrames.push_back(sf);
+                        else if (frameLetter == 'F') def.painFrames.push_back(sf);
+                        else if (frameLetter >= 'G' && frameLetter <= 'L') def.deathFrames.push_back(sf);
+                    } else if (folderName == "Arachnobaron") {
+                        if (frameLetter >= 'A' && frameLetter <= 'F') def.idleFrames.push_back(sf);
+                        else if (frameLetter >= 'G' && frameLetter <= 'H') def.painFrames.push_back(sf);
+                        else if (frameLetter >= 'J' && frameLetter <= 'O') def.deathFrames.push_back(sf);
+                    } else {
+                        if (frameLetter >= 'A' && frameLetter <= 'E') def.idleFrames.push_back(sf);
+                        else if (frameLetter == 'H') def.painFrames.push_back(sf);
+                        else if (frameLetter >= 'I' && frameLetter <= 'O') def.deathFrames.push_back(sf);
+                    }
+                }
+
+            }
+        }
+    }
+    if (def.idleFrames.empty()) return;
+    if (def.painFrames.empty()) def.painFrames.push_back(def.idleFrames[0]);
+    if (def.deathFrames.empty()) def.deathFrames.push_back(def.idleFrames[0]);
+    
+    std::string painP, deathP, attackP;
+    if (folderName == "Agaures") { painP="assets/SOUNDS/AGURPAIN.ogg"; deathP="assets/SOUNDS/AGURDTH1.ogg"; attackP="assets/SOUNDS/AGURHITS.ogg"; }
+    else if (folderName == "Cacobite") { painP="assets/SOUNDS/CACOBPAI.ogg"; deathP="assets/SOUNDS/CACOBDTH.ogg"; attackP="assets/SOUNDS/BABYBITE.ogg"; }
+    else if (folderName == "Arachnobaron") { painP="assets/SOUNDS/DSABRDTH.ogg"; deathP="assets/SOUNDS/DSABRDTH.ogg"; attackP="assets/SOUNDS/AGURSWNG.ogg"; }
+
+    auto lSnd = [](const std::string& p, short*& d, int& s, int& r, int& c) {
+        if (!p.empty() && std::filesystem::exists(p)) {
+            short* dec = nullptr;
+            int smp = stb_vorbis_decode_filename(p.c_str(), &c, &r, &dec);
+            if (smp > 0) { d = dec; s = smp * c; }
+        }
+    };
+    lSnd(painP, def.soundPain, def.soundPainSamples, def.soundPainRate, def.soundPainChannels);
+    lSnd(deathP, def.soundDeath, def.soundDeathSamples, def.soundDeathRate, def.soundDeathChannels);
+    lSnd(attackP, def.soundAttack, def.soundAttackSamples, def.soundAttackRate, def.soundAttackChannels);
 }

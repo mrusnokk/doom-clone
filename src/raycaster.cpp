@@ -200,57 +200,78 @@ void Raycaster::render(std::vector<uint32_t>& framebuffer, int screenWidth, int 
     // se na konci své platnosti (zde na konci funkce render) bezpečně spojí sám!
 }
 
-void Raycaster::renderSprites(std::vector<uint32_t>& framebuffer, int screenWidth, int screenHeight, const Player& player, std::vector<Sprite>& sprites, const std::vector<double>& zBuffer) {
-    // Vypočteme vzdálenosti spritů od hráče pro účely třídění
+void Raycaster::renderSprites(std::vector<uint32_t>& framebuffer, int screenWidth, int screenHeight, const Player& player, std::vector<Sprite>& sprites, const std::vector<double>& zBuffer, const std::vector<EnemyDef>& enemyTypes, const std::vector<std::vector<SpriteFrame>>& projectileTypes) {
     std::vector<std::pair<double, int>> spriteOrder(sprites.size());
     for(size_t i = 0; i < sprites.size(); i++) {
         spriteOrder[i].first = ((player.x - sprites[i].x) * (player.x - sprites[i].x) + (player.y - sprites[i].y) * (player.y - sprites[i].y));
         spriteOrder[i].second = i;
     }
-    // Setřídíme od nejvzdálenějšího po nejbližší
     std::sort(spriteOrder.rbegin(), spriteOrder.rend());
 
     for(size_t i = 0; i < sprites.size(); i++) {
         int spriteIdx = spriteOrder[i].second;
-        if (sprites[spriteIdx].state == 0) continue; // Mrtvé nekreslíme
+
+        if (sprites[spriteIdx].state == -1) continue;
+        if (sprites[spriteIdx].isProjectile && sprites[spriteIdx].state == 0) continue;
 
         double spriteX = sprites[spriteIdx].x - player.x;
         double spriteY = sprites[spriteIdx].y - player.y;
 
-        // Transformace pomocí inverzní matice kamery
         double invDet = 1.0 / (player.planeX * player.dirY - player.dirX * player.planeY);
         double transformX = invDet * (player.dirY * spriteX - player.dirX * spriteY);
         double transformY = invDet * (-player.planeY * spriteX + player.planeX * spriteY);
 
-        if (transformY <= 0) continue; // Je za kamerou
-
         int spriteScreenX = int((screenWidth / 2) * (1 + transformX / transformY));
-        
-        int vMoveScreen = int(player.z / transformY);
-        
-        int spriteHeight = std::abs(int(screenHeight / transformY));
-        int drawStartY = -spriteHeight / 2 + screenHeight / 2 + vMoveScreen;
-        if(drawStartY < 0) drawStartY = 0;
-        int drawEndY = spriteHeight / 2 + screenHeight / 2 + vMoveScreen;
-        if(drawEndY >= screenHeight) drawEndY = screenHeight - 1;
+        int vMoveScreen = int(0.0 / transformY);
 
-        int spriteWidth = std::abs(int(screenHeight / transformY));
+        int spriteHeight = abs(int(screenHeight / (transformY)));
+        int drawStartY = -spriteHeight / 2 + screenHeight / 2 + vMoveScreen;
+        if (drawStartY < 0) drawStartY = 0;
+        int drawEndY = spriteHeight / 2 + screenHeight / 2 + vMoveScreen;
+        if (drawEndY >= screenHeight) drawEndY = screenHeight - 1;
+
+        int spriteWidth = abs(int(screenHeight / (transformY)));
         int drawStartX = -spriteWidth / 2 + spriteScreenX;
-        if(drawStartX < 0) drawStartX = 0;
+        if (drawStartX < 0) drawStartX = 0;
         int drawEndX = spriteWidth / 2 + spriteScreenX;
-        if(drawEndX >= screenWidth) drawEndX = screenWidth - 1;
+        if (drawEndX >= screenWidth) drawEndX = screenWidth - 1;
+
+        int texWidth = TEX_WIDTH;
+        int texHeight = TEX_HEIGHT;
+        const uint32_t* texturePtr = enemyTexture;
+        
+        int type = sprites[spriteIdx].type;
+        const std::vector<SpriteFrame>* animFrames = nullptr;
+        
+        if (sprites[spriteIdx].isProjectile) {
+            if (type >= 0 && type < projectileTypes.size()) {
+                animFrames = &projectileTypes[type];
+            }
+        } else {
+            if (type >= 0 && type < enemyTypes.size()) {
+                if (sprites[spriteIdx].state == 1) animFrames = &enemyTypes[type].idleFrames;
+                else if (sprites[spriteIdx].state == 2) animFrames = &enemyTypes[type].painFrames;
+                else animFrames = &enemyTypes[type].deathFrames;
+            }
+        }
+        
+        if (animFrames && !animFrames->empty()) {
+            int frameIdx = sprites[spriteIdx].frameIndex;
+            if (frameIdx < 0 || frameIdx >= animFrames->size()) frameIdx = 0;
+            const auto& sf = (*animFrames)[frameIdx];
+            texWidth = sf.w;
+            texHeight = sf.h;
+            texturePtr = sf.pixels.data();
+        }
 
         for(int stripe = drawStartX; stripe < drawEndX; stripe++) {
-            int texX = int(256 * (stripe - (-spriteWidth / 2 + spriteScreenX)) * TEX_WIDTH / spriteWidth) / 256;
-            if(transformY > 0 && stripe > 0 && stripe < screenWidth && transformY < zBuffer[stripe]) {
+            int texX = int(256 * (stripe - (-spriteWidth / 2 + spriteScreenX)) * texWidth / spriteWidth) / 256;
+            if (transformY > 0 && stripe > 0 && stripe < screenWidth && transformY < zBuffer[stripe]) {
                 for(int y = drawStartY; y < drawEndY; y++) {
                     int d = (y - vMoveScreen) * 256 - screenHeight * 128 + spriteHeight * 128;
-                    int texY = ((d * TEX_HEIGHT) / spriteHeight) / 256;
-                    uint32_t color = enemyTexture[TEX_HEIGHT * texY + texX];
-                    if((color & 0x00FFFFFF) != 0) { 
-                        if (sprites[spriteIdx].damageTimer > 0) {
-                            color = 0xFFFF0000; // Červená barva při zasažení
-                        }
+                    int texY = ((d * texHeight) / spriteHeight) / 256;
+                    uint32_t color = texturePtr[texWidth * texY + texX];
+                    if ((color & 0xFF000000) != 0) {
                         framebuffer[y * screenWidth + stripe] = color;
                     }
                 }

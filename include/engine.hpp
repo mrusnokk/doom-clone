@@ -65,15 +65,11 @@ private:
     double shootTimer = 0.0;
     double playerDamageTimer = 0.0;
     double gameOverTimer = 0.0;
-
-    struct SpriteFrame {
-        std::vector<uint32_t> pixels;
-        int w;
-        int h;
-    };
-
-    // UI textury (dynamické velikosti)
+// UI textury (dynamické velikosti)
     std::vector<SpriteFrame> weaponFrames;
+    std::vector<EnemyDef> enemyTypes;
+    void loadEnemyDef(const std::string& directoryPath, EnemyDef& def);
+    std::vector<std::vector<SpriteFrame>> projectileTypes;
     int weaponFrameIndex = 0;
     double weaponAnimTimer = 0.0;
     double WEAPON_ANIM_SPEED = 0.05;
@@ -90,8 +86,18 @@ private:
     // --- AUDIO SYSTEM ---
     SDL_AudioDeviceID audioDevice = 0;
     SDL_AudioStream* weaponAudioStream = nullptr;
+    SDL_AudioStream* activeStreams[8] = {nullptr};
+    int currentAudioStream = 0;
+    void playSound(short* data, int samples, int sampleRate = 44100, int channels = 1);
     short* weaponAudioData = nullptr;
     int weaponAudioSamples = 0;
+    int weaponAudioRate = 44100;
+    int weaponAudioChannels = 1;
+
+    short* playerPainData = nullptr;
+    int playerPainSamples = 0;
+    int playerPainRate = 44100;
+    int playerPainChannels = 1;
 
     SDL_Window* window;
     SDL_Renderer* renderer;
