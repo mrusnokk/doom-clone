@@ -12,12 +12,14 @@
 // Vložíme implementaci stb_vorbis.c přímo sem, abychom nemuseli řešit C/C++ kompilátory v CMake
 #include "stb_vorbis.c"
 #include <stdlib.h>
+#include <time.h>
 
 Engine::Engine(int width, int height)
     : screenWidth(width), screenHeight(height), isRunning(false),
       window(nullptr), renderer(nullptr), frameTexture(nullptr),
       framebuffer(width * height, 0)
 {
+    srand((unsigned)time(NULL));
     player = {2.0, 2.0, -1.0, 0.0, 0.0, 0.66};
     loadHighScore();
 
@@ -463,6 +465,8 @@ void Engine::processInput(double deltaTime) {
                 player.planeX = 0.0;
                 player.planeY = 0.66;
                 playerDamageTimer = 0.0;
+                playerScore = 0;
+                enemySpawnTimer = 4.0;
                 
                 for (auto& sprite : sprites) {
                     sprite.state = 1;
@@ -730,6 +734,59 @@ void Engine::processInput(double deltaTime) {
                             doorOffsets[x][y] = 0.0;
                             doorStates[x][y] = 0; // Plně zavřeno
                         }
+                    }
+                }
+            }
+            }
+        }
+        
+        // --- ARCADE RESPAWN LOGIC ---
+        if (player.hp > 0 && currentState == GameState::PLAYING) {
+            enemySpawnTimer -= deltaTime;
+            if (enemySpawnTimer <= 0.0) {
+                // Calculate spawn interval based on score
+                double interval = std::max(1.0, 4.0 - (playerScore / 2000.0));
+                enemySpawnTimer = interval;
+                
+                // Find a spawn position far enough from player
+                int sX = 0, sY = 0;
+                bool found = false;
+                for (int tries = 0; tries < 50; tries++) {
+                    sX = rand() % MAP_WIDTH;
+                    sY = rand() % MAP_HEIGHT;
+                    if (isWalkable(sX, sY)) {
+                        double dx = sX - player.x;
+                        double dy = sY - player.y;
+                        if (dx*dx + dy*dy > 64.0) { // At least 8 blocks away
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (found) {
+                    // Find a dead sprite or add new one
+                    int spawnType = rand() % enemyTypes.size();
+                    bool reused = false;
+                    for (auto& s : sprites) {
+                        if (s.state == -1 && !s.isProjectile) {
+                            s.x = sX + 0.5;
+                            s.y = sY + 0.5;
+                            s.spawnX = sX + 0.5;
+                            s.spawnY = sY + 0.5;
+                            s.type = spawnType;
+                            s.hp = enemyTypes[spawnType].maxHp;
+                            s.state = 1;
+                            s.animTimer = 0;
+                            s.frameIndex = 0;
+                            s.damageTimer = 0;
+                            reused = true;
+                            break;
+                        }
+                    }
+                    if (!reused && sprites.size() < 100) {
+                        // Create new
+                        sprites.push_back({sX + 0.5, sY + 0.5, 0, spawnType, enemyTypes[spawnType].maxHp, 1, 0.0, sX + 0.5, sY + 0.5, 0.0, 0.0, 0, 0.0, false});
                     }
                 }
             }
