@@ -949,14 +949,16 @@ void Engine::render() {
             // Políčko v původním DOOM HUDu je zhruba na 10% až 30% šířky obrazovky
             std::string hpStr = std::to_string(player.hp) + "%";
             drawText(hpStr, screenWidth * 0.12, screenHeight - (hudH * 0.6), 0xFF00FF00, 3);
-            drawText("SCORE: " + std::to_string(playerScore), screenWidth * 0.60, screenHeight - (hudH * 0.6), 0xFF00FFFF, 3);
+            std::string scoreStr = "SCORE: " + std::to_string(playerScore);
+            drawText(scoreStr, screenWidth - (scoreStr.length() * 10 * 3) - 20, screenHeight - (hudH * 0.6), 0xFF00FFFF, 3);
         } else {
             // Fallback HUD
             drawRect(20, screenHeight - 40, 200, 20, 0xFFFF0000); 
             int hpWidth = (player.hp > 0) ? (player.hp * 2) : 0;
             drawRect(20, screenHeight - 40, hpWidth, 20, 0xFF00FF00); 
             drawText("HP: " + std::to_string(player.hp), 25, screenHeight - 38, 0xFFFFFFFF, 2);
-            drawText("SCORE: " + std::to_string(playerScore), screenWidth - 150, screenHeight - 38, 0xFF00FFFF, 2);
+            std::string scoreStr = "SCORE: " + std::to_string(playerScore);
+            drawText(scoreStr, screenWidth - (scoreStr.length() * 10 * 2) - 20, screenHeight - 38, 0xFF00FFFF, 2);
         }
 
         // Zčervenání obrazovky při zranění
