@@ -19,6 +19,7 @@ Engine::Engine(int width, int height)
       framebuffer(width * height, 0)
 {
     player = {2.0, 2.0, -1.0, 0.0, 0.0, 0.66};
+    loadHighScore();
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
     {
@@ -71,9 +72,9 @@ Engine::Engine(int width, int height)
     projectileTypes.push_back(p1);
     projectileTypes.push_back(p2);
 
-    EnemyDef type0; loadEnemyDef("assets/SPRITES/ENEMIES/Agaures", type0); type0.maxHp = 100; if (!type0.idleFrames.empty()) enemyTypes.push_back(type0);
-    EnemyDef type1; loadEnemyDef("assets/SPRITES/ENEMIES/Cacobite", type1); type1.maxHp = 200; if (!type1.idleFrames.empty()) enemyTypes.push_back(type1);
-    EnemyDef type2; loadEnemyDef("assets/SPRITES/ENEMIES/Arachnobaron", type2); type2.maxHp = 300; if (!type2.idleFrames.empty()) enemyTypes.push_back(type2);
+    EnemyDef type0; loadEnemyDef("assets/SPRITES/ENEMIES/Agaures", type0); type0.maxHp = 100; type0.scoreValue = 100; if (!type0.idleFrames.empty()) enemyTypes.push_back(type0);
+    EnemyDef type1; loadEnemyDef("assets/SPRITES/ENEMIES/Cacobite", type1); type1.maxHp = 200; type1.scoreValue = 300; if (!type1.idleFrames.empty()) enemyTypes.push_back(type1);
+    EnemyDef type2; loadEnemyDef("assets/SPRITES/ENEMIES/Arachnobaron", type2); type2.maxHp = 300; type2.scoreValue = 500; if (!type2.idleFrames.empty()) enemyTypes.push_back(type2);
     sprites = {
         {8.5, 8.5, 0, 0, 100, 1, 0.0, 8.5, 8.5, 0.0, 0.0, 0, 0.0},
         {10.5, 9.5, 0, 0, 100, 1, 0.0, 10.5, 9.5, 0.0, 0.0, 0, 0.0},
@@ -237,6 +238,7 @@ Engine::Engine(int width, int height)
 
 Engine::~Engine()
 {
+    saveHighScore();
     if (weaponAudioStream) {
         SDL_DestroyAudioStream(weaponAudioStream);
     }
@@ -425,6 +427,7 @@ void Engine::processInput(double deltaTime) {
                                 sprite.hp -= 35;
                                 sprite.damageTimer = 0.2; 
                                 if (sprite.hp <= 0 && sprite.state != 0) {
+                                    playerScore += enemyTypes[sprite.type].scoreValue;
                                     sprite.state = 0; 
                                     sprite.animTimer = 0;
                                     sprite.frameIndex = 0;
@@ -696,7 +699,9 @@ void Engine::processInput(double deltaTime) {
         if (player.hp <= 0) {
             player.hp = 0;
             if (currentState != GameState::GAME_OVER) {
-                currentState = GameState::GAME_OVER; 
+                currentState = GameState::GAME_OVER;
+                if (playerScore > highScore) highScore = playerScore;
+                saveHighScore(); 
                 gameOverTimer = 1.5; // Ochrana před okamžitým přeskočením (1.5 sekundy)
             }
         }
@@ -835,6 +840,7 @@ void Engine::drawMenu() {
 
     // Nápis MENU nahoře
     drawText("MAIN MENU", screenWidth / 2 - 90, screenHeight / 2 - 120, 0xFFFFFFFF, 4);
+    drawText("HIGH SCORE: " + std::to_string(highScore), screenWidth / 2 - 90, screenHeight / 2 - 80, 0xFF00FF00, 2);
 
     // 2. Definice rozměrů pro tlačítka
     int btnW = 240; // Trochu rozšíříme kvůli textu
@@ -943,12 +949,14 @@ void Engine::render() {
             // Políčko v původním DOOM HUDu je zhruba na 10% až 30% šířky obrazovky
             std::string hpStr = std::to_string(player.hp) + "%";
             drawText(hpStr, screenWidth * 0.12, screenHeight - (hudH * 0.6), 0xFF00FF00, 3);
+            drawText("SCORE: " + std::to_string(playerScore), screenWidth * 0.60, screenHeight - (hudH * 0.6), 0xFF00FFFF, 3);
         } else {
             // Fallback HUD
             drawRect(20, screenHeight - 40, 200, 20, 0xFFFF0000); 
             int hpWidth = (player.hp > 0) ? (player.hp * 2) : 0;
             drawRect(20, screenHeight - 40, hpWidth, 20, 0xFF00FF00); 
             drawText("HP: " + std::to_string(player.hp), 25, screenHeight - 38, 0xFFFFFFFF, 2);
+            drawText("SCORE: " + std::to_string(playerScore), screenWidth - 150, screenHeight - 38, 0xFF00FFFF, 2);
         }
 
         // Zčervenání obrazovky při zranění
@@ -994,6 +1002,26 @@ void Engine::render() {
     SDL_RenderClear(renderer);
     SDL_RenderTexture(renderer, frameTexture, nullptr, nullptr);
     SDL_RenderPresent(renderer);
+}
+
+#include <fstream>
+
+void Engine::loadHighScore() {
+    std::ifstream file("highscore.txt");
+    if (file.is_open()) {
+        file >> highScore;
+        file.close();
+    } else {
+        highScore = 0;
+    }
+}
+
+void Engine::saveHighScore() {
+    std::ofstream file("highscore.txt");
+    if (file.is_open()) {
+        file << highScore;
+        file.close();
+    }
 }
 
 void Engine::run()

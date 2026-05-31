@@ -13,6 +13,7 @@ struct EnemyDef {
     std::vector<SpriteFrame> painFrames;
     std::vector<SpriteFrame> deathFrames;
     int maxHp = 100;
+    int scoreValue = 100;
     
     short* soundPain = nullptr;
     int soundPainSamples = 0;

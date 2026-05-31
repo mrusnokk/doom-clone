@@ -58,6 +58,13 @@ private:
     bool isRunning;
     uint64_t lastTime; // <--- Přidána proměnná pro čas
 
+    int playerScore = 0;
+    int highScore = 0;
+    void loadHighScore();
+    void saveHighScore();
+
+    double enemySpawnTimer = 0.0;
+
     // Proměnné pro zbraň
     bool isMoving;
     double weaponBobTime;
